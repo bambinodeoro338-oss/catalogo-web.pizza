@@ -5,7 +5,7 @@
 const appData = {
   config: {
     pizzeriaName: "Bambino D’ Oro",
-    whatsappNumber: "3153693952", // Se auto-normaliza a 57xxxxxxxxxx si faltara +57
+    whatsappNumber: "3178530811", // Se auto-normaliza a 57xxxxxxxxxx si faltara +57
     businessHours: "Lunes a Domingo: 5:00 PM – 11:00 PM",
     currency: "COP"
   },
