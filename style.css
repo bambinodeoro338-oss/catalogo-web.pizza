@@ -1,0 +1,1088 @@
+/* =======================================================
+   Bambino D’Oro – UI rústico moderno (optimizado)
+   - Arreglo de ruta de imagen de fondo con fallback.
+   - Nombre de archivo correcto (.css).
+======================================================= */
+
+/* ---------- Variables ---------- */
+:root {
+    --bg: #161312;
+    /* negro mate cálido */
+    --surface: #1d1917;
+    /* carbón */
+    --surface-2: #211d1b;
+    /* carbón 2 */
+    --text: #f2efe9;
+    /* beige claro */
+    --muted: #cfc6b8;
+    /* beige tenue */
+    --border: #3a2f2b;
+    /* marrón carbón */
+
+    --red: #b4161b;
+    /* rojo horno */
+    --red-2: #e3382b;
+    --mustard: #d9a441;
+    /* mostaza */
+    --olive: #7a8b49;
+    /* verde oliva */
+    --wood: #795548;
+    /* marrón madera */
+
+    --radius-xl: 22px;
+    --radius: 14px;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+    --shadow-sm: 0 6px 18px rgba(0, 0, 0, .35);
+
+    --wrap-max: 1100px;
+    --gap: 16px;
+}
+
+/* ---------- Reset base ---------- */
+* {
+    box-sizing: border-box
+}
+
+html {
+    scroll-behavior: smooth
+}
+
+body {
+    margin: 0;
+    font-family: Manrope, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    color: var(--text);
+    /* Fallback sólido + degradados + textura (si existe) */
+    background-color: var(--bg);
+    background:
+        linear-gradient(to bottom, rgba(0, 0, 0, .25), rgba(0, 0, 0, .25)),
+        radial-gradient(1200px 800px at 20% -10%, #2a2421 0%, var(--bg) 50%),
+        url('images/textures/wood.jpg');
+    background-size: cover, auto, cover;
+    background-attachment: fixed, fixed, fixed;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* chalkboard headings */
+.theme-rustic h1,
+.theme-rustic h2,
+.theme-rustic .chalk {
+    font-family: 'Shadows Into Light Two', cursive;
+    letter-spacing: .3px;
+}
+
+/* Links & focus */
+a {
+    color: inherit;
+    text-decoration: none
+}
+
+:focus-visible {
+    outline: 2px dashed var(--mustard);
+    outline-offset: 2px;
+    border-radius: 8px
+}
+
+/* ---------- Header / Hero ---------- */
+.hero {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px 14px;
+    background: rgba(22, 19, 18, .7);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+}
+
+.hero h1 {
+    margin: 0;
+    font-size: clamp(26px, 4vw, 36px);
+    font-weight: 800
+}
+
+.hero .emoji {
+    font-size: clamp(22px, 5vw, 34px)
+}
+
+/* ---------- Main wrapper ---------- */
+.wrap {
+    max-width: var(--wrap-max);
+    margin: 0 auto;
+    padding: 24px 16px 60px
+}
+
+/* Utility */
+.sr-only {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden
+}
+
+.hidden {
+    display: none !important
+}
+
+/* ---------- (Opcional) Nav de secciones ---------- */
+.sections-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 18px;
+}
+
+.sections-nav a {
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, .2);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-weight: 700;
+}
+
+/* ---------- Home (portada por secciones) ---------- */
+
+
+.home {
+    display: grid;
+    gap: var(--gap);
+    grid-template-columns: repeat(4, minmax(180px, 1fr))
+}
+
+#home::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("images/imagen-fondo.png") center/cover no-repeat;
+  opacity: 0.25; /* Ajusta la transparencia */
+  z-index: 0;
+}
+
+#home > * {
+  position: relative;
+  z-index: 1; /* para que el contenido quede por encima */
+}
+
+@media (max-width:980px) {
+    .home {
+        grid-template-columns: repeat(3, 1fr)
+    }
+}
+
+@media (max-width:720px) {
+    .home {
+        grid-template-columns: repeat(2, 1fr)
+    }
+}
+
+@media (max-width:460px) {
+    .home {
+        grid-template-columns: 1fr
+    }
+}
+
+.card {
+    background: linear-gradient(180deg, rgba(245, 237, 225, .96), rgba(235, 223, 205, .96));
+    color: #2a211e;
+    border: 1px solid rgba(0, 0, 0, .06);
+    border-radius: var(--radius-xl);
+    padding: 24px 18px;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 900;
+    letter-spacing: .2px;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: var(--shadow-sm);
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow)
+}
+
+.card:active {
+    transform: translateY(-1px)
+}
+
+/* ---------- Vista interna ---------- */
+.vista {
+    animation: fade .18s ease-out
+}
+
+.vista h2 {
+    margin: .25rem 0 1rem;
+    font-size: clamp(22px, 2.8vw, 28px);
+    font-weight: 900
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, .15);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: .9rem
+}
+
+.back {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #2a2421;
+    color: var(--text);
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: background .12s ease, transform .08s ease;
+}
+
+.back:hover {
+    background: #322a27
+}
+
+.back:active {
+    transform: translateY(1px)
+}
+
+/* ---------- Tabs de Pizza ---------- */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+    flex-wrap: wrap
+}
+
+.tab {
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, .2);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 8px 14px;
+    white-space: nowrap;
+    cursor: pointer
+}
+
+.tab.active {
+    background: var(--mustard);
+    color: #2a211e;
+    border-color: transparent;
+    font-weight: 800
+}
+
+/* ---------- Grid de productos ---------- */
+.items {
+    display: grid;
+    gap: var(--gap);
+    grid-template-columns: repeat(2, minmax(260px, 1fr))
+}
+
+@media (max-width:780px) {
+    .items {
+        grid-template-columns: 1fr
+    }
+}
+
+.item {
+    background: linear-gradient(180deg, #201b19, #181412);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+
+.item:hover {
+    transform: translateY(-2px);
+    border-color: #4a3d38;
+    box-shadow: var(--shadow)
+}
+
+.item .photo {
+    aspect-ratio: 16/9;
+    width: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #332822;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2);
+    margin-bottom: 10px;
+}
+
+.item .photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(1.05) brightness(.96) contrast(1.05)
+}
+
+.item h3 {
+    margin: .25rem 0 .35rem;
+    display: flex;
+    gap: .4rem;
+    flex-wrap: wrap;
+    align-items: baseline;
+    font-size: 1.06rem;
+    font-weight: 800;
+    font-family: 'Shadows Into Light Two', cursive;
+}
+
+.item .precio {
+    font-weight: 900;
+    color: var(--mustard)
+}
+
+.item .desc {
+    color: var(--muted);
+    margin-top: .25rem
+}
+
+/* ---------- Acciones del producto ---------- */
+.product-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: .6rem;
+    gap: .5rem
+}
+
+.quantity-selector {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: rgba(0, 0, 0, .25);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px
+}
+
+.quantity-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: #2a2421;
+    color: var(--text);
+    cursor: pointer
+}
+
+.quantity-btn:hover {
+    background: #3a302b
+}
+
+.quantity-display {
+    min-width: 22px;
+    text-align: center
+}
+
+.btn {
+    border: none;
+    cursor: pointer;
+    font-weight: 800;
+    letter-spacing: .2px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    transition: filter .12s ease, transform .08s ease
+}
+
+.btn:hover {
+    filter: brightness(.95)
+}
+
+.btn:active {
+    transform: translateY(1px)
+}
+
+.btn-red {
+    background: linear-gradient(180deg, var(--red-2), var(--red));
+    color: #f7ebe0
+}
+
+.btn-mustard {
+    background: linear-gradient(180deg, #f2d38e, var(--mustard));
+    color: #2a211e
+}
+
+.btn-olive {
+    background: linear-gradient(180deg, #95a35a, var(--olive));
+    color: #13100f
+}
+
+/* ---------- Carrito ---------- */
+.cart {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 50
+}
+
+.cart-icon {
+    background: linear-gradient(180deg, #2a2421, #1f1a18);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    border-radius: 999px;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    font-size: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cart-icon.xl {
+    padding: 16px 18px;
+    font-size: 22px
+}
+
+.cart-icon span {
+    background: var(--red-2);
+    color: #fff;
+    font-weight: 900;
+    padding: 4px 8px;
+    border-radius: 999px
+}
+
+.cart-content {
+    position: absolute;
+    right: 0;
+    bottom: 68px;
+    width: min(420px, 94vw);
+    background: linear-gradient(180deg, #231e1b, #1b1715);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    transform-origin: 100% 100%;
+    transform: scale(.98) translateY(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .16s ease, opacity .16s ease;
+}
+
+.cart-content.open {
+    opacity: 1;
+    pointer-events: all;
+    transform: scale(1) translateY(0)
+}
+
+.cart-content h3 {
+    margin: .2rem 0 8px;
+    font-family: 'Shadows Into Light Two', cursive;
+    font-size: 1.35rem
+}
+
+.cart-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px dashed #543f37
+}
+
+.cart-item:last-child {
+    border-bottom: none
+}
+
+.cart-item-remove {
+    background: #2a2421;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    cursor: pointer
+}
+
+.cart-item-price {
+    color: var(--mustard);
+    font-weight: 900
+}
+
+.cart-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+    font-weight: 900
+}
+
+.cart-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px
+}
+
+/* ---------- Modales ---------- */
+.modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    place-items: center;
+    background: rgba(10, 8, 7, .65);
+    backdrop-filter: blur(4px);
+    z-index: 60
+}
+
+.modal .modal-content {
+    width: min(760px, 94vw);
+    max-height: 86vh;
+    overflow: auto;
+    background: #231e1b;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+}
+
+.modal .close {
+    position: sticky;
+    top: 0;
+    margin-left: auto;
+    display: block;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 28px;
+    cursor: pointer
+}
+
+.panel {
+    margin: 12px 0;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #1f1a18
+}
+
+.panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between
+}
+
+.picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px
+}
+
+.size-picker,
+.slice-picker {
+    display: grid;
+    grid-auto-flow: column;
+    gap: 8px;
+    overflow: auto;
+    padding: 6px 2px
+}
+
+/* ===== BOTONES DE PIZZA TAMAÑOS CON IMAGEN MÁS GRANDE ===== */
+
+.size-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+.size-btn-has-image {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 20px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.size-btn-has-image:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+}
+
+/* 🔍 Aquí agrandamos la imagen */
+.size-thumb {
+  width: 70px;         /* antes 40px */
+  height: 70px;        /* antes 40px */
+  border-radius: 14px; /* un poquito más redondeado */
+  object-fit: cover;
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+/* Mejor texto */
+.size-label {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: .3px;
+}
+
+
+
+.size-btn,
+.slice-btn,
+.tab-btn {
+    border: 1px solid var(--border);
+    background: #2a2421;
+    color: var(--text);
+    border-radius: 999px;
+    padding: 8px 12px;
+    cursor: pointer;
+    white-space: nowrap
+}
+
+.size-btn.active,
+.slice-btn.active,
+.tab-btn.active {
+    background: var(--mustard);
+    color: #2a211e;
+    border-color: transparent;
+    font-weight: 900
+}
+
+.builder-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0
+}
+
+.tab-content {
+    margin-top: 10px
+}
+
+.mixta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px
+}
+
+@media (max-width:560px) {
+    .mixta-grid {
+        grid-template-columns: 1fr
+    }
+}
+
+.builder-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background: #1f1a18;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin: 10px 0
+}
+
+.builder-price {
+    font-weight: 900;
+    color: var(--mustard)
+}
+
+/* ---------- Formulario ---------- */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px
+}
+
+.form-group.full {
+    grid-column: 1 / -1
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: #1f1a18;
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px;
+    font: inherit
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #a69384
+}
+
+.btn-submit {
+    width: 100%;
+    margin-top: 10px
+}
+
+/* ---------- Footer ---------- */
+.site-footer {
+    border-top: 1px solid var(--border);
+    background: #1f1a18;
+    padding: 16px 0;
+    margin-top: 36px
+}
+
+.site-footer p {
+    color: var(--muted);
+    margin: .25rem 0
+}
+
+/* ---------- Notificaciones ---------- */
+.notification {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--olive);
+    color: #13100f;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-weight: 900;
+    z-index: 70;
+    box-shadow: var(--shadow-sm);
+    animation: slideIn .22s ease
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-8px);
+        opacity: 0
+    }
+
+    to {
+        transform: none;
+        opacity: 1
+    }
+}
+
+@keyframes fade {
+    from {
+        opacity: .85;
+        transform: translateY(4px)
+    }
+
+    to {
+        opacity: 1;
+        transform: none
+    }
+}
+
+#vista {
+  position: relative;
+  
+}
+
+#vista::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45); /* 45% oscuridad */
+  z-index: 0;
+}
+
+#vista > * {
+  position: relative;
+  z-index: 1;
+}
+/* ----- ESTILOS DE LAS TABS DE PIZZAS ----- */
+.tabs {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+/* Botones base */
+.tab {
+  background-color: #ed0d0dff;
+  color: #eee;
+  border: 1px solid #444;
+  border-radius: 30px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Efecto al pasar el mouse */
+.tab:hover {
+  background-color: #ffb700;
+  color: #000;
+  box-shadow: 0 0 8px rgba(255, 183, 0, 0.5);
+}
+
+/* Botón activo */
+.tab.active {
+  background-color: #ffb700 !important; /* amarillo brillante 🍕 */
+  color: #000 !important;
+  border: none;
+  box-shadow: 0 0 10px rgba(255, 183, 0, 0.6);
+}
+/* --- Social bar --- */
+.social-bar{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--border);
+  display:flex; align-items:center; justify-content:flex-start;
+}
+.ig-btn{
+  display:inline-flex; align-items:center; gap:10px;
+  background: linear-gradient(90deg, #fd1d1d, #fcb045);
+  color:#111; font-weight:900; padding:10px 14px;
+  border-radius:999px; box-shadow: var(--shadow-sm);
+  text-decoration:none;
+  transition:transform .12s ease, filter .12s ease;
+}
+.ig-btn:hover{ transform: translateY(-1px); filter: brightness(.95); }
+.ig-icon{ font-size:18px; }
+.ig-user{ opacity:.9; font-weight:700; }
+
+/* ---------- Estilos para Estofados ---------- */
+.item[data-product-id^="50"],
+.item[data-product-id^="51"] {
+  border: 2px solid var(--mustard);
+}
+
+.item[data-product-id^="50"] h3::before,
+.item[data-product-id^="51"] h3::before {
+  content: "🍲 ";
+}
+
+#estofadoModal h2 {
+  color: var(--mustard);
+}
+
+#estofadoModal .builder-summary {
+  background: #1f1a18;
+  border: 1px solid var(--border);
+}
+
+#estofadoModal .desc {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+.alert-warning{
+  background: rgba(217, 164, 65, .12);
+  border: 1px solid var(--mustard);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+/* Imagen dentro del modal de Estofado */
+.estofado-image-box {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.estofado-image-box img.estofado-img {
+  width: 180px;
+  height: auto;
+  border-radius: 12px;
+  border: 2px solid var(--mustard);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  background-color: #1f1a18;
+}
+
+.estofado-image-box .no-image {
+  font-size: 0.9rem;
+  color: var(--muted);
+  background: rgba(217,164,65,0.1);
+  border: 1px dashed var(--mustard);
+  border-radius: 10px;
+  padding: 0.5rem;
+  display: inline-block;
+}
+
+/* Animación al añadir al carrito */
+.cart-icon.highlight {
+  animation: cartHighlight 0.8s ease;
+}
+
+@keyframes cartHighlight {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(255, 204, 0, 0);
+  }
+  30% {
+    transform: scale(1.3);
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.8);
+  }
+  60% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(255, 204, 0, 0);
+  }
+}
+
+/* ====== Pizza Tamaños: botones grandes con foto tipo tarjeta ====== */
+
+/* Solo afecta el panel de tamaños dentro de la vista principal (#vista),
+   NO el modal de Arma tu Pizza */
+#vista .panel .size-picker {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  padding: 10px 0;
+  overflow: visible;
+}
+
+/* El botón se vuelve una tarjeta similar a un producto */
+#vista .panel .size-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  background: #231e1b;
+  border-radius: 20px;
+  padding: 10px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+/* Imagen del tamaño (igual que las de Pizza Porciones / Estofados) */
+#vista .panel .size-btn img,
+#vista .panel .size-btn .size-thumb {
+  width: 100%;
+  height: 150px;         /* aquí puedes subir o bajar la altura */
+  object-fit: cover;
+  border-radius: 16px;
+  margin-bottom: 6px;
+}
+
+/* Texto del tamaño */
+#vista .panel .size-btn span,
+#vista .panel .size-btn .size-label {
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+/* ===== MODAL ADICIONES ESTILO PROFESIONAL ===== */
+
+#addonsModal .modal-content {
+  max-width: 600px;
+  background: #1a1715;
+  border-radius: 22px;
+  padding: 25px 30px;
+  box-shadow: 0 0 50px rgba(0,0,0,0.6);
+  color: var(--text);
+}
+
+/* Título */
+#addonsModal h3 {
+  font-size: 1.7rem;
+  margin-bottom: 10px;
+}
+
+/* Lista general */
+#addonsList {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Contenedor de cada adición */
+.addon-option {
+  display: grid;
+  grid-template-columns: 30px 1fr auto 60px; 
+  align-items: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 10px 16px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.addon-option:hover {
+  background: rgba(255,255,255,0.07);
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+/* Icono */
+.addon-icon {
+  font-size: 1.3rem;
+}
+
+/* Nombre */
+.addon-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Precio */
+.addon-price {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--mustard);
+}
+
+/* Checkbox personalizado */
+.addon-option input[type="checkbox"] {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--mustard);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: .2s;
+}
+
+.addon-option input[type="checkbox"]:checked {
+  background: var(--mustard);
+  border-color: var(--mustard);
+}
+
+.addon-option input[type="checkbox"]:checked::after {
+  content: "✔";
+  color: #000;
+  font-size: 14px;
+  position: absolute;
+  top: -2px;
+  left: 3px;
+  font-weight: bold;
+}
+
+/* Botones inferiores */
+#addonsModal .btn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+#addonsSkip {
+  background: #fff;
+  color: #000;
+}
+
+#addonsConfirm {
+  background: var(--mustard);
+  color: #000;
+}
+
+
+

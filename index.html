@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- SEO básico -->
+  <title>Bambino D’ Oro – Menú y pedidos en línea</title>
+  <meta name="description" content="Pide en línea a Bambino D’Oro: pizzas artesanales, lasañas, burritos, esquites y bebidas. Domicilio rápido en tu zona." />
+  <meta name="keywords" content="Bambino D’Oro, pizzería, pizza artesanal, lasaña, burritos, esquites, domicilio, menú, pedir por WhatsApp" />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://bambino-catalogo.netlify.app/" />
+
+  <!-- Colores del navegador -->
+  <meta name="theme-color" content="#161312" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="images/favicon.png" type="image/png" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Bambino D’ Oro – Menú y pedidos en línea" />
+  <meta property="og:description" content="Pizzas, lasañas, burritos y bebidas. Haz tu pedido por WhatsApp en Bambino D’Oro." />
+  <meta property="og:url" content="https://bambino-catalogo.netlify.app/" />
+  <meta property="og:image" content="https://bambino-catalogo.netlify.app/images/preview.jpg" />
+  <meta property="og:locale" content="es_CO" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Bambino D’ Oro – Menú y pedidos en línea" />
+  <meta name="twitter:description" content="Pizzas artesanales, lasañas y más. Pide por WhatsApp." />
+  <meta name="twitter:image" content="https://bambino-catalogo.netlify.app/images/preview.jpg" />
+
+  <!-- Optimizaciones de fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style"
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;800&family=Shadows+Into+Light+Two&display=swap"
+        onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;800&family=Shadows+Into+Light+Two&display=swap">
+  </noscript>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Datos estructurados -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    "name": "Bambino D’Oro",
+    "url": "https://bambino-catalogo.netlify.app/",
+    "image": "https://bambino-catalogo.netlify.app/images/preview.jpg",
+    "servesCuisine": "Italiana",
+    "priceRange": "$$",
+    "acceptsReservations": "False",
+    "sameAs": ["https://www.instagram.com/elbambinodeoro_12"],
+    "address": { "@type": "PostalAddress", "addressCountry": "CO" }
+  }
+  </script>
+
+  <!-- Meta description dinámica según hash -->
+  <script>
+    (function () {
+      var metaDesc = null;
+      function ensureMeta() {
+        metaDesc = document.querySelector('meta[name="description"]');
+        if (!metaDesc) {
+          metaDesc = document.createElement('meta');
+          metaDesc.setAttribute('name', 'description');
+          document.head.appendChild(metaDesc);
+        }
+      }
+      function updateMeta() {
+        ensureMeta();
+        var h = (location.hash || '#home').replace('#', '');
+        if (h === 'home' || h === '') {
+          metaDesc.setAttribute('content', 'Pide en línea a Bambino D’Oro: pizzas artesanales, lasañas, burritos, esquites y bebidas. Domicilio rápido en tu zona.');
+          document.title = 'Bambino D’ Oro – Menú y pedidos en línea';
+          return;
+        }
+        var pretty = h.charAt(0).toUpperCase() + h.slice(1).replace(/-/g, ' ');
+        metaDesc.setAttribute('content', 'Explora ' + pretty + ' en el menú de Bambino D’Oro y haz tu pedido por WhatsApp.');
+        document.title = pretty + ' – Bambino D’ Oro';
+      }
+      window.addEventListener('hashchange', updateMeta);
+      document.addEventListener('DOMContentLoaded', updateMeta);
+    })();
+  </script>
+</head>
+<body class="theme-rustic">
+  <a href="#mainContent" class="sr-only">Saltar al contenido</a>
+
+  <header class="hero" role="banner">
+    <h1 id="pizzeriaName" class="chalk">Bambino D’ Oro</h1>
+    <span class="emoji" aria-hidden="true">🍕</span>
+  </header>
+
+  <aside id="cart" class="cart" aria-live="polite" aria-label="Carrito">
+    <div class="cart-icon xl" role="button" tabindex="0" aria-expanded="false" aria-controls="cartPanel">
+      🛒 <span id="cartCount">0</span>
+    </div>
+    <div id="cartPanel" class="cart-content" role="region" aria-label="Panel de carrito">
+      <h3>Tu Pedido</h3>
+      <div id="cartItems"></div>
+      <div class="cart-total">Subtotal: <span id="cartTotal">$0</span></div>
+      <div class="cart-actions">
+        <button id="checkoutBtn" class="btn btn-red btn-checkout" disabled>Finalizar Pedido</button>
+        <button id="clearCartBtn" class="btn btn-olive btn-clear">Vaciar</button>
+      </div>
+    </div>
+  </aside>
+
+  <main id="mainContent" class="wrap">
+    <h2 class="sr-only">Menú de pizzas, lasañas, burritos, esquites y bebidas de Bambino D’Oro</h2>
+    <section id="home" class="home" aria-label="Categorías"></section>
+    <section id="vista" class="vista hidden" aria-live="polite"></section>
+  </main>
+
+  <!-- Modal de pedido -->
+  <div id="orderModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="orderTitle" hidden>
+    <div class="modal-content">
+      <button class="close" aria-label="Cerrar">&times;</button>
+      <h2 id="orderTitle" class="chalk">Finalizar Pedido</h2>
+      <div id="orderSummary" class="order-summary"></div>
+
+      <section class="panel" aria-labelledby="addonsTitle">
+        <div class="panel-head"></div>
+        <div id="addonsPicker" class="picker-grid"></div>
+      </section>
+
+      <form id="orderForm" novalidate>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="customerName">Nombre</label>
+            <input type="text" id="customerName" required placeholder="Tu nombre" autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label for="phone">Teléfono</label>
+            <input type="tel" id="phone" required placeholder="Tu WhatsApp" inputmode="tel" autocomplete="tel" />
+          </div>
+          <div class="form-group full">
+            <label for="address">Dirección</label>
+            <textarea id="address" required placeholder="Dirección de entrega" rows="2" autocomplete="street-address"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="paymentMethod">Pago</label>
+            <select id="paymentMethod" required>
+              <option value="">Selecciona método</option>
+              <option value="Efectivo">Efectivo</option>
+              <option value="Nequi">Nequi</option>
+            </select>
+          </div>
+
+          <!-- AVISO para Nequi (nuevo) -->
+          <div id="nequiWarning" class="alert-warning" hidden>
+            No olvide enviar su comprobante de pago. Si no lo envía, el pedido no se realizará.
+          </div>
+
+          <!-- SIEMPRE VISIBLE -->
+          <div class="form-group" id="cashField">
+            <label for="cashAmount">¿Con cuánto cancela?</label>
+            <input type="number"
+                  id="cashAmount"
+                  min="0"
+                  step="1000"
+                  inputmode="numeric"
+                  placeholder="Ej: 50000" />
+            <small class="hint">Si pagas por transferencia, escribe 0 o deja el campo vacío.</small>
+          </div>
+
+          <div class="form-group full">
+            <label for="notes">Notas</label>
+            <textarea id="notes" placeholder="Instrucciones adicionales" rows="2"></textarea>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-mustard btn-submit">Enviar Pedido por WhatsApp</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modales existentes (pizza y estofado) -->
+  <div id="pizzaBuilderModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="builderTitle" hidden>
+    <div class="modal-content">
+      <button class="close builder-close" aria-label="Cerrar">&times;</button>
+      <h2 id="builderTitle" class="chalk">Arma tu Pizza</h2>
+      <div class="size-picker" id="sizePicker"></div>
+      <div class="slice-picker">
+        <label>Selecciona el número de porciones</label>
+        <div id="sliceOptions"></div>
+      </div>
+      <div class="builder-tabs" role="tablist">
+        <button class="tab-btn active" data-tab="tradicional" role="tab" aria-selected="true">Tradicionales</button>
+        <button class="tab-btn" data-tab="especial" role="tab" aria-selected="false">Especiales</button>
+        <button class="tab-btn" data-tab="mixta" role="tab" aria-selected="false">Mixta</button>
+      </div>
+      <div class="tab-content" id="tab-tradicional">
+        <label for="selectTradicional">Sabor tradicional</label>
+        <select id="selectTradicional"></select>
+      </div>
+      <div class="tab-content hidden" id="tab-especial">
+        <label for="selectEspecial">Sabor especial</label>
+        <select id="selectEspecial"></select>
+      </div>
+      <div class="tab-content hidden" id="tab-mixta">
+        <div class="mixta-grid">
+          <div>
+            <label for="selectMixta1">Mitad 1</label>
+            <select id="selectMixta1"></select>
+          </div>
+          <div>
+            <label for="selectMixta2">Mitad 2</label>
+            <select id="selectMixta2"></select>
+          </div>
+        </div>
+        <small>Puedes combinar sabores tradicionales y especiales. Siempre 2 sabores diferentes.</small>
+      </div>
+      <div class="builder-summary">
+        <div>
+          <strong id="builderName">Pizza</strong>
+          <div id="builderDetail" class="builder-detail"></div>
+        </div>
+        <div class="builder-price">Precio: <span id="builderPrice">$0</span></div>
+      </div>
+      <div class="product-actions">
+        <div class="quantity-selector" aria-label="Cantidad">
+          <button class="quantity-btn minus" id="builderQtyMinus" aria-label="Restar">-</button>
+          <span class="quantity-display" id="builderQty" aria-live="polite">1</span>
+          <button class="quantity-btn plus" id="builderQtyPlus" aria-label="Sumar">+</button>
+        </div>
+        <button class="btn btn-red btn-add-to-cart" id="builderAddBtn">Agregar al carrito</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="estofadoModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="estofadoTitle" hidden>
+    <div class="modal-content">
+      <button class="close estofado-close" aria-label="Cerrar">&times;</button>
+      <h2 id="estofadoTitle" class="chalk">Arma tu Estofado</h2>
+      <div id="estofadoImageBox" class="estofado-image-box"></div>
+      <p id="estofadoInfo" class="desc"></p>
+      <div class="tab-content" id="tab-estofado">
+        <div class="mixta-grid">
+          <div>
+            <label for="selectEst1">Sabor 1</label>
+            <select id="selectEst1"></select>
+          </div>
+          <div>
+            <label for="selectEst2">Sabor 2</label>
+            <select id="selectEst2"></select>
+          </div>
+        </div>
+        <small>Solo puedes escoger entre Hawaiana, Kabano y Pollo con Champiñones.</small>
+      </div>
+      <div class="builder-summary">
+        <div>
+          <strong id="estofadoName">Estofado</strong>
+          <div id="estofadoDetail" class="builder-detail"></div>
+        </div>
+        <div class="builder-price">Precio: <span id="estofadoPrice">$0</span></div>
+      </div>
+      <div class="product-actions">
+        <div class="quantity-selector" aria-label="Cantidad">
+          <button class="quantity-btn minus" id="estofadoQtyMinus" aria-label="Restar">-</button>
+          <span class="quantity-display" id="estofadoQty" aria-live="polite">1</span>
+          <button class="quantity-btn plus" id="estofadoQtyPlus" aria-label="Sumar">+</button>
+        </div>
+        <button class="btn btn-red btn-add-to-cart" id="estofadoAddBtn">Agregar al carrito</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="wrap">
+      <p>📞 WhatsApp: <strong id="whatsappNumber">Cargando…</strong></p>
+      <p>⏰ Horario: <span id="businessHours">Cargando…</span></p>
+    </div>
+    <div class="social-bar">
+      <a class="ig-btn" href="https://www.instagram.com/elbambinodeoro_12?igsh=MW9taXAydGkxZW1xOQ==" target="_blank" rel="noopener noreferrer" aria-label="Síguenos en Instagram">
+        <span class="ig-icon">📷</span>
+        <strong>Síguenos en Instagram</strong>
+        <span class="ig-user">@elbambinodeoro_12</span>
+      </a>
+    </div>
+
+    <!-- Modal de Adiciones -->
+<div class="modal" id="addonsModal" hidden>
+  <div class="modal-content">
+    <button class="close" id="addonsClose">×</button>
+    <h3 class="chalk">Elige tus adiciones</h3>
+    <p style="margin-bottom:8px;">Selecciona las adiciones que quieras para este producto.</p>
+
+    <div id="addonsList"></div>
+
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-muted" id="addonsSkip">Sin adiciones</button>
+      <button class="btn btn-mustard" id="addonsConfirm">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+  </footer>
+
+  <noscript><p>Para usar el catálogo y el carrito, habilita JavaScript.</p></noscript>
+
+  <script src="app-data.js" defer></script>
+  <script src="script.js" defer></script>
+</body>
+</html>
