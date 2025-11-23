@@ -569,10 +569,24 @@ function addToCart(id) {
     form.locationLink = '';
   }
 
-  if (!form.customerName || !form.phone || !form.address || !form.paymentMethod) {
-    if (typeof toast === 'function') toast('Completa los campos obligatorios');
-    return;
-  }
+  var warningBox = qs('#orderWarning');
+
+if (!form.customerName || !form.phone || !form.address || !form.paymentMethod) {
+  if (warningBox) {
+  warningBox.textContent = 'Por favor completa todos los campos obligatorios.';
+  warningBox.hidden = false;
+
+  setTimeout(() => {
+    warningBox.hidden = true;
+  }, 3000);
+}
+
+  return;
+}
+
+// si todo está bien, ocultamos el aviso
+if (warningBox) warningBox.hidden = true;
+
 
   sendOrderToWhatsApp(form);
   clearCart();
