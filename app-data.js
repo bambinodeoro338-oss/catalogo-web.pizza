@@ -27,7 +27,7 @@ const appData = {
     },
     slices: {
       familiar: [8, 10, 12, 16],
-      mediana:  [8, 10],
+      mediana:  [8],
       junior:   [4],
       personal: [4],
       mini:     []
