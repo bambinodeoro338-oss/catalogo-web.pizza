@@ -57,19 +57,26 @@ var $home = document.getElementById('home');
   }
 
     // ----- Estofado: permitir sabores específicos, con coincidencia flexible -----
-  function isAllowedEstofadoFlavor(product) {
-    var n = normalizeText(product && product.name);
-    if (!n) return false;
-    // Hawaiana (soporta hawai, hawaiAna, hawaina)
-    if (n.includes('hawa')) return true;
-    // Kabano / Cabano
-    if (n.includes('kabano') || n.includes('cabano') || n.includes('kaban') || n.includes('caban')) return true;
-    // Jamón y queso
-    if (n.includes('jamon') && n.includes('queso')) return true;
-    // Pollo con champiñones (acepta variaciones)
-    if (n.includes('pollo') && (n.includes('champi') || n.includes('champin'))) return true;
-    return false;
-  }
+  // ----- Estofado: sabores permitidos (Hawaiana, Kabano, Jamón y queso, Pollo con champiñones) -----
+function isAllowedEstofadoFlavor(product) {
+  var n = normalizeText(product && product.name);
+  if (!n) return false;
+
+  // Hawaiana (soporta hawai, hawaina, etc.)
+  if (n.includes('hawa')) return true;
+
+  // Kabano / Cabano
+  if (n.includes('kabano') || n.includes('cabano') || n.includes('kaban') || n.includes('caban')) return true;
+
+  // Jamón y queso
+  if (n.includes('jamon') && n.includes('queso')) return true;
+
+  // Pollo con champiñones (acepta variaciones)
+  if (n.includes('pollo') && (n.includes('champi') || n.includes('champin'))) return true;
+
+  return false;
+}
+
 
 
   // Pequeño helper para animar el carrito
@@ -714,22 +721,27 @@ function addToCart(id) {
   }
 
   // Tabs (Tradicional / Especial / Mixta)
-  qsa('.tab-btn').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var tabName = b.getAttribute('data-tab');
+  // Usar solo el ámbito del modal de pizza, no todo el documento
+var scope = pizzaModal || document;
 
-      // Si es Mixta pero el tamaño no lo permite, ignorar
-      var mixtaAllowed = (builder.size === 'familiar' || builder.size === 'mediana' || builder.size === 'junior');
-      if (tabName === 'mixta' && !mixtaAllowed) return;
+qsa('.tab-btn', scope).forEach(function (b) {
+  b.addEventListener('click', function () {
+    // Activar solo los tabs dentro del modal de pizza
+    qsa('.tab-btn', scope).forEach(function (x) { x.classList.remove('active'); });
+    b.classList.add('active');
 
-      qsa('.tab-btn').forEach(function (x) { x.classList.remove('active'); });
-      b.classList.add('active');
-      builder.mode = tabName;
-      qsa('.tab-content').forEach(function (c) { c.classList.add('hidden'); });
-      var tab = qs('#tab-' + builder.mode); if (tab) tab.classList.remove('hidden');
-      updateBuilderView();
-    });
+    builder.mode = b.getAttribute('data-tab');
+
+    // Ocultar solo los contenidos de pestañas del modal de pizza
+    qsa('.tab-content', scope).forEach(function (c) { c.classList.add('hidden'); });
+
+    var tab = qs('#tab-' + builder.mode, scope);
+    if (tab) tab.classList.remove('hidden');
+
+    updateBuilderView();
   });
+});
+
 
   // Mostrar / ocultar pestaña Mixta por tamaño
   var mixtaTab     = qs('.tab-btn[data-tab="mixta"]');
