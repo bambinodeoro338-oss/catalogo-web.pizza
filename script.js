@@ -20,6 +20,8 @@ var pendingQty = 1;
 // (selectedAddons ya no se usa para todo el pedido, pero lo dejamos
 // por compatibilidad si algo lo llama)
 var selectedAddons = {};
+// aquí guardaremos la última ubicación tomada
+var clientLocation = null;
 
 var $home = document.getElementById('home');
   var $vista = document.getElementById('vista');
@@ -521,6 +523,10 @@ function addToCart(id) {
     msg += '- Nombre: ' + (form.customerName || '') + '\n';
     msg += '- Teléfono: ' + (form.phone || '') + '\n';
     msg += '- Dirección: ' + (form.address || '') + '\n';
+     // NUEVO: ubicación (si el cliente la compartió)
+  if (form.locationLink) {
+    msg += '- Ubicación: ' + form.locationLink + '\n';
+  }
     msg += '- Método de pago: ' + (form.paymentMethod || '') + '\n';
     if (form.cashAmount) {
       var efectivoNum = Number(String(form.cashAmount).replace(/[^\d]/g, '')) || 0;
@@ -556,6 +562,24 @@ function addToCart(id) {
     };
     form.cashAmount = (qs('#cashAmount') && qs('#cashAmount').value || '').trim();
 
+     if (clientLocation && clientLocation.lat && clientLocation.lng) {
+    form.locationLink = 'https://www.google.com/maps?q=' +
+      clientLocation.lat + ',' + clientLocation.lng;
+  } else {
+    form.locationLink = '';
+  }
+
+  if (!form.customerName || !form.phone || !form.address || !form.paymentMethod) {
+    if (typeof toast === 'function') toast('Completa los campos obligatorios');
+    return;
+  }
+
+  sendOrderToWhatsApp(form);
+  clearCart();
+  closeOrderModal();
+  if (typeof toast === 'function') toast('¡Pedido enviado!');
+
+
     if (!form.customerName || !form.phone || !form.address || !form.paymentMethod) {
       if (typeof toast === 'function') toast('Completa los campos obligatorios');
       return;
@@ -565,7 +589,11 @@ function addToCart(id) {
     clearCart();
     closeOrderModal();
     if (typeof toast === 'function') toast('¡Pedido enviado!');
+
+    
   }
+
+  
 
   // --- Pizza/Estofado builders ---
   var builder = { size: null, slices: null, mode: 'tradicional', qty: 1, saborTrad: null, saborEsp: null, mitad1: null, mitad2: null };
@@ -966,68 +994,120 @@ function computeBuilderPrice() {
   closeEstofadoBuilder();
   openAdditionsModal();
 }
+function setupLocationButton() {
+  var btn = document.getElementById('useLocationBtn');
+  var status = document.getElementById('locationStatus');
+
+  if (!btn) return;
+
+  // Si el navegador no soporta geolocalización
+  if (!('geolocation' in navigator)) {
+    if (status) {
+      status.textContent = 'Tu dispositivo no permite ubicación automática. Puedes escribir la dirección manualmente.';
+    }
+    btn.disabled = true;
+    return;
+  }
+
+  btn.addEventListener('click', function () {
+    if (status) status.textContent = 'Obteniendo ubicación...';
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        clientLocation = {
+          lat: pos.coords.latitude.toFixed(6),
+          lng: pos.coords.longitude.toFixed(6)
+        };
+        if (status) status.textContent = 'Ubicación agregada al pedido ✅';
+        btn.classList.remove('loading');
+      },
+      function (err) {
+        console.warn('Error geolocalización', err);
+        clientLocation = null;
+        if (status) status.textContent = 'No se pudo obtener la ubicación. Revisa los permisos de ubicación.';
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  });
+}
 
 
   // -------------- Eventos ----------------
   function addEventListeners() {
-    document.addEventListener('click', function (e) {
-      var cardLink = hasClosest(e.target, '.card[data-cat][href^="#"]');
-      if (cardLink) { setTimeout(route, 0); }
-
-      var qtyBtn = hasClosest(e.target, '.quantity-btn');
-      if (qtyBtn) {
-        var isPlus = qtyBtn.classList.contains('plus');
-        var prodId = qtyBtn.getAttribute('data-product-id');
-        var addonId = qtyBtn.getAttribute('data-addon-id');
-        if (prodId) { updateQuantity(prodId, isPlus ? +1 : -1); return; }
-        if (addonId) { changeAddonQty(addonId, isPlus ? +1 : -1); return; }
-      }
-
-      var addBtn = hasClosest(e.target, '.btn-add-to-cart');
-      if (addBtn) { addToCart(addBtn.getAttribute('data-product-id')); return; }
-
-      var remBtn = hasClosest(e.target, '.cart-item-remove');
-if (remBtn) { removeFromCart(remBtn.getAttribute('data-index')); return; }
-
-
-      var back = hasClosest(e.target, '[data-back]');
-      if (back) { location.hash = '#home'; return; }
-
-      var cartIcon = hasClosest(e.target, '.cart-icon');
-      if (cartIcon) {
-        var panel = qs('#cartPanel');
-        var expanded = cartIcon.getAttribute('aria-expanded') === 'true';
-        cartIcon.setAttribute('aria-expanded', String(!expanded));
-        if (panel) panel.classList.toggle('open');
-        return;
-      }
-
-      var checkout = hasClosest(e.target, '#checkoutBtn') || hasClosest(e.target, '.btn-checkout');
-      if (checkout) { openOrderModal(); return; }
-
-      if (e.target === orderModal) { closeOrderModal(); }
-      if (e.target === pizzaModal) { closePizzaBuilder(); }
-      if (e.target === estofadoModal) { closeEstofadoBuilder(); }
-      if (hasClosest(e.target, '#orderModal .close')) { closeOrderModal(); }
-      if (hasClosest(e.target, '#pizzaBuilderModal .close')) { closePizzaBuilder(); }
-      if (hasClosest(e.target, '#estofadoModal .close')) { closeEstofadoBuilder(); }
-    });
-
-    var pm = qs('#paymentMethod');
-    if (pm) {
-      pm.addEventListener('change', function(){
-        var nw = qs('#nequiWarning');
-        if (!nw) return;
-        nw.hidden = (pm.value !== 'Nequi');
-      });
+  document.addEventListener('click', function (e) {
+    var cardLink = hasClosest(e.target, '.card[data-cat][href^="#"]');
+    if (cardLink) {
+      setTimeout(route, 0);
     }
 
-    var clearBtn = qs('#clearCartBtn');
-    if (clearBtn) { clearBtn.addEventListener('click', function () { clearCart(); }); }
+    var qtyBtn = hasClosest(e.target, '.quantity-btn');
+    if (qtyBtn) {
+      var isPlus = qtyBtn.classList.contains('plus');
+      var prodId = qtyBtn.getAttribute('data-product-id');
+      var addonId = qtyBtn.getAttribute('data-addon-id');
+      if (prodId) { updateQuantity(prodId, isPlus ? +1 : -1); return; }
+      if (addonId) { changeAddonQty(addonId, isPlus ? +1 : -1); return; }
+    }
 
-    var orderForm = qs('#orderForm');
-    if (orderForm) orderForm.addEventListener('submit', handleOrderSubmit);
+    var addBtn = hasClosest(e.target, '.btn-add-to-cart');
+    if (addBtn) { addToCart(addBtn.getAttribute('data-product-id')); return; }
+
+    var remBtn = hasClosest(e.target, '.cart-item-remove');
+    if (remBtn) {
+      removeFromCart(remBtn.getAttribute('data-index'));
+      return;
+    }
+
+    var back = hasClosest(e.target, '[data-back]');
+    if (back) { location.hash = '#home'; return; }
+
+    var cartIcon = hasClosest(e.target, '.cart-icon');
+    if (cartIcon) {
+      var panel = qs('#cartPanel');
+      var expanded = cartIcon.getAttribute('aria-expanded') === 'true';
+      cartIcon.setAttribute('aria-expanded', String(!expanded));
+      if (panel) panel.classList.toggle('open');
+      return;
+    }
+
+    var checkout = hasClosest(e.target, '#checkoutBtn') || hasClosest(e.target, '.btn-checkout');
+    if (checkout) { openOrderModal(); return; }
+
+    if (e.target === orderModal) { closeOrderModal(); }
+    if (e.target === pizzaModal) { closePizzaBuilder(); }
+    if (e.target === estofadoModal) { closeEstofadoBuilder(); }
+    if (hasClosest(e.target, '#orderModal .close')) { closeOrderModal(); }
+    if (hasClosest(e.target, '#pizzaBuilderModal .close')) { closePizzaBuilder(); }
+    if (hasClosest(e.target, '#estofadoModal .close')) { closeEstofadoBuilder(); }
+  });
+
+  var pm = qs('#paymentMethod');
+  if (pm) {
+    pm.addEventListener('change', function () {
+      var nw = qs('#nequiWarning');
+      if (!nw) return;
+      nw.hidden = (pm.value !== 'Nequi');
+    });
   }
+
+  var clearBtn = qs('#clearCartBtn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function () { clearCart(); });
+  }
+
+  var orderForm = qs('#orderForm');
+  if (orderForm) {
+    orderForm.addEventListener('submit', handleOrderSubmit);
+  }
+
+  // ⬇️ AQUÍ llamamos al botón de ubicación
+  setupLocationButton();
+}
+
 
   // ---- Eventos del modal de Adiciones ----
 var addonsConfirm = qs('#addonsConfirm');
