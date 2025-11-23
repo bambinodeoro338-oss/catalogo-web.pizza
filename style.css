@@ -1084,5 +1084,39 @@ textarea::placeholder {
   color: #000;
 }
 
+/* ===== Botón de ubicación en el checkout ===== */
+
+.btn-location {
+  margin-top: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--mustard);
+  background: transparent;
+  color: var(--mustard);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.btn-location:hover {
+  background: var(--mustard);
+  color: #000;
+  transform: translateY(-1px);
+}
+
+.btn-location.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+#locationStatus {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
 
 
