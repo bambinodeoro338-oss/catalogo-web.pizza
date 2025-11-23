@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="es-CO">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- SEO básico -->
   <title>Bambino D’ Oro – Menú y pedidos en línea</title>
-  <meta name="description" content="Pide en línea a Bambino D’Oro: pizzas artesanales, lasañas, burritos, esquites y bebidas. Domicilio rápido en tu zona." />
-  <meta name="keywords" content="Bambino D’Oro, pizzería, pizza artesanal, lasaña, burritos, esquites, domicilio, menú, pedir por WhatsApp" />
+  <meta name="description"
+    content="Pide en línea a Bambino D’Oro: pizzas artesanales, lasañas, burritos, esquites y bebidas. Domicilio rápido en tu zona." />
+  <meta name="keywords"
+    content="Bambino D’Oro, pizzería, pizza artesanal, lasaña, burritos, esquites, domicilio, menú, pedir por WhatsApp" />
   <meta name="robots" content="index,follow" />
   <link rel="canonical" href="https://bambino-catalogo.netlify.app/" />
 
@@ -20,7 +23,8 @@
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Bambino D’ Oro – Menú y pedidos en línea" />
-  <meta property="og:description" content="Pizzas, lasañas, burritos y bebidas. Haz tu pedido por WhatsApp en Bambino D’Oro." />
+  <meta property="og:description"
+    content="Pizzas, lasañas, burritos y bebidas. Haz tu pedido por WhatsApp en Bambino D’Oro." />
   <meta property="og:url" content="https://bambino-catalogo.netlify.app/" />
   <meta property="og:image" content="https://bambino-catalogo.netlify.app/images/preview.jpg" />
   <meta property="og:locale" content="es_CO" />
@@ -35,11 +39,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preload" as="style"
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;800&family=Shadows+Into+Light+Two&display=swap"
-        onload="this.onload=null;this.rel='stylesheet'">
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;800&family=Shadows+Into+Light+Two&display=swap"
+    onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;800&family=Shadows+Into+Light+Two&display=swap">
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;800&family=Shadows+Into+Light+Two&display=swap">
   </noscript>
 
   <link rel="stylesheet" href="style.css" />
@@ -89,6 +93,7 @@
     })();
   </script>
 </head>
+
 <body class="theme-rustic">
   <a href="#mainContent" class="sr-only">Saltar al contenido</a>
 
@@ -142,8 +147,17 @@
           </div>
           <div class="form-group full">
             <label for="address">Dirección</label>
-            <textarea id="address" required placeholder="Dirección de entrega" rows="2" autocomplete="street-address"></textarea>
+            <textarea id="address" required placeholder="Dirección de entrega" rows="2"
+              autocomplete="street-address"></textarea>
+
+            <button type="button" id="useLocationBtn" class="btn-location">
+              Usar mi ubicación actual
+            </button>
+            <small id="locationStatus" class="hint">
+              Opcional: puedes compartir tu ubicación si tu dispositivo lo permite.
+            </small>
           </div>
+
           <div class="form-group">
             <label for="paymentMethod">Pago</label>
             <select id="paymentMethod" required>
@@ -161,12 +175,7 @@
           <!-- SIEMPRE VISIBLE -->
           <div class="form-group" id="cashField">
             <label for="cashAmount">¿Con cuánto cancela?</label>
-            <input type="number"
-                  id="cashAmount"
-                  min="0"
-                  step="1000"
-                  inputmode="numeric"
-                  placeholder="Ej: 50000" />
+            <input type="number" id="cashAmount" min="0" step="1000" inputmode="numeric" placeholder="Ej: 50000" />
             <small class="hint">Si pagas por transferencia, escribe 0 o deja el campo vacío.</small>
           </div>
 
@@ -277,7 +286,8 @@
       <p>⏰ Horario: <span id="businessHours">Cargando…</span></p>
     </div>
     <div class="social-bar">
-      <a class="ig-btn" href="https://www.instagram.com/elbambinodeoro_12?igsh=MW9taXAydGkxZW1xOQ==" target="_blank" rel="noopener noreferrer" aria-label="Síguenos en Instagram">
+      <a class="ig-btn" href="https://www.instagram.com/elbambinodeoro_12?igsh=MW9taXAydGkxZW1xOQ==" target="_blank"
+        rel="noopener noreferrer" aria-label="Síguenos en Instagram">
         <span class="ig-icon">📷</span>
         <strong>Síguenos en Instagram</strong>
         <span class="ig-user">@elbambinodeoro_12</span>
@@ -285,26 +295,29 @@
     </div>
 
     <!-- Modal de Adiciones -->
-<div class="modal" id="addonsModal" hidden>
-  <div class="modal-content">
-    <button class="close" id="addonsClose">×</button>
-    <h3 class="chalk">Elige tus adiciones</h3>
-    <p style="margin-bottom:8px;">Selecciona las adiciones que quieras para este producto.</p>
+    <div class="modal" id="addonsModal" hidden>
+      <div class="modal-content">
+        <button class="close" id="addonsClose">×</button>
+        <h3 class="chalk">Elige tus adiciones</h3>
+        <p style="margin-bottom:8px;">Selecciona las adiciones que quieras para este producto.</p>
 
-    <div id="addonsList"></div>
+        <div id="addonsList"></div>
 
-    <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
-      <button class="btn btn-muted" id="addonsSkip">Sin adiciones</button>
-      <button class="btn btn-mustard" id="addonsConfirm">Confirmar</button>
+        <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+          <button class="btn btn-muted" id="addonsSkip">Sin adiciones</button>
+          <button class="btn btn-mustard" id="addonsConfirm">Confirmar</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
   </footer>
 
-  <noscript><p>Para usar el catálogo y el carrito, habilita JavaScript.</p></noscript>
+  <noscript>
+    <p>Para usar el catálogo y el carrito, habilita JavaScript.</p>
+  </noscript>
 
   <script src="app-data.js" defer></script>
   <script src="script.js" defer></script>
 </body>
+
 </html>
