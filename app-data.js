@@ -12,11 +12,11 @@ const appData = {
 
     pizzaOptions: {
   sizes: [
-    { id: "familiar", label: "Familiar (52×52 cm)", image: "images/pizzas/pizza-familiar.jpg" },
-    { id: "mediana",  label: "Mediana (45×45 cm)",  image: "images/pizzas/pizza-mediana.jpg" },
-    { id: "junior",   label: "Junior (35×35 cm)",   image: "images/pizzas/pizza-junior.jpg" },
-    { id: "personal", label: "Personal (26×26 cm)", image: "images/pizzas/pizza-personal.jpg" },
-    { id: "mini",     label: "Mini (22×22 cm)",     image: "images/pizzas/pizza-mini.jpg" }
+    { id: "familiar", label: "Familiar (52×52 cm)", image: "images/pizzas/pizza-familiar.png" },
+    { id: "mediana",  label: "Mediana (45×45 cm)",  image: "images/pizzas/pizza-mediana.png" },
+    { id: "junior",   label: "Junior (35×35 cm)",   image: "images/pizzas/pizza-junior.png" },
+    { id: "personal", label: "Personal (26×26 cm)", image: "images/pizzas/pizza-personal.png" },
+    { id: "mini",     label: "Mini (22×22 cm)",     image: "images/pizzas/pizza-mini.png" }
   ],
     sizePrices: {
       familiar: { tradicional: 63000, especial: 72000, mixta: 67000 },
