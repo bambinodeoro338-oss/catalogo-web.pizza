@@ -833,39 +833,38 @@ function computeBuilderPrice() {
   var t = (hasAppData() && appData.pizzaOptions && appData.pizzaOptions.sizePrices && appData.pizzaOptions.sizePrices[builder.size]) || null;
   if (!t) return 0;
 
-  // Tradicional / Especial: igual que antes
+  // Tradicional / Especial
   if (builder.mode === 'tradicional' && builder.saborTrad) return t.tradicional || 0;
-  if (builder.mode === 'especial' && builder.saborEsp)   return t.especial   || 0;
+  if (builder.mode === 'especial'   && builder.saborEsp)   return t.especial   || 0;
 
   // ----- Lógica especial para Mixta -----
   if (builder.mode === 'mixta' && builder.mitad1 && builder.mitad2) {
-    // Mixta solo en Familiar, Mediana y Junior
     if (builder.size === 'personal' || builder.size === 'mini') return 0;
 
-    var g1 = getPizzaGroupById(builder.mitad1); // 'tradicional' | 'especial'
+    var g1 = getPizzaGroupById(builder.mitad1);
     var g2 = getPizzaGroupById(builder.mitad2);
-
     if (!g1 || !g2) return 0;
 
     var comboType;
     if (g1 === 'tradicional' && g2 === 'tradicional') {
-      comboType = 'TT'; // Tradicional + Tradicional
+      comboType = 'TT';
     } else if (g1 === 'especial' && g2 === 'especial') {
-      comboType = 'EE'; // Especial + Especial
+      comboType = 'EE';
     } else if (
       (g1 === 'tradicional' && g2 === 'especial') ||
       (g1 === 'especial' && g2 === 'tradicional')
     ) {
-      comboType = 'TE'; // Tradicional + Especial
+      comboType = 'TE';
     } else {
       return 0;
     }
 
-    var mixtaPrices = {
-      familiar: { TT: 67000, TE: 70000, EE: 74000 },
-      mediana:  { TT: 45000, TE: 48000, EE: 52000 },
-      junior:   { TT: 35000, TE: 38000, EE: 41000 }
+        var mixtaPrices = {
+      familiar: { TT: 63000, TE: 67000, EE: 72000 },
+      mediana:  { TT: 42000, TE: 45000, EE: 48000 },
+      junior:   { TT: 32000, TE: 35000, EE: 37000 }
     };
+
 
     var bySize = mixtaPrices[builder.size];
     if (!bySize) return 0;
@@ -875,6 +874,7 @@ function computeBuilderPrice() {
 
   return 0;
 }
+
 
 
   function pickName(id) { var p = findProductById(id); return p ? p.name : ''; }
