@@ -1118,5 +1118,24 @@ textarea::placeholder {
   color: var(--muted);
 }
 
+/* ===== Alerta de Validación en el Modal de Pedido ===== */
+.order-warning {
+  background: rgba(255, 0, 0, 0.15);
+  border: 1px solid rgba(255, 80, 80, 0.6);
+  color: #ff6b6b;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  animation: warnFade 0.3s ease;
+}
+
+@keyframes warnFade {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
 
 
