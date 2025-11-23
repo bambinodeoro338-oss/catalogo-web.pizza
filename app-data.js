@@ -69,7 +69,7 @@ const appData = {
         /* individuales – tradicionales */
         { id: 1, name: "Hawaiana", group: "tradicional", description: "Piña, jamón y queso.", price: 8000, image: "images/pizzas/hawaiana.jpg" },
         { id: 2, name: "Pollo con champiñón", group: "tradicional", description: "Pollo desmechado, champiñones, jamón y queso.", price: 8000, image: "images/pizzas/pollo-champinon.jpg" },
-        { id: 3, name: "Kabano", group: "tradicional", description: "Kabano y queso.", price: 8000, image: "images/pizzas/kabano.jpg" },
+        { id: 3, name: "Kabano", group: "tradicional", description: "Kabano y queso.", price: 8000, image: "images/pizzas/Kabano.jpg" },
         { id: 4, name: "Jamón y queso", group: "tradicional", description: "Jamón y queso.", price: 8000, image: "images/pizzas/jamon-queso.jpg" },
         { id: 5, name: "Pepperoni", group: "tradicional", description: "Pepperoni y queso.", price: 8500, image: "images/pizzas/pepperoni.jpg" },
         { id: 6, name: "Maduro", group: "tradicional", description: "Maduro, tocineta y queso.", price: 8000, image: "images/pizzas/maduro.jpg" },
