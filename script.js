@@ -1,34 +1,25 @@
 // =======================================================
-// Bambino D’Oro – script v8 (limpieza total + Mixta estable)
+// Bambino D’Oro – script v7.6 (parche estofado + fix agregar) - CORREGIDO
 // =======================================================
 
 (function () {
-  // Polyfill CSS.escape
   if (typeof window.CSS === 'undefined') window.CSS = {};
   if (typeof window.CSS.escape !== 'function') {
-    window.CSS.escape = function (v) {
-      return String(v).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
-    };
+    window.CSS.escape = function (v) { return String(v).replace(/[^a-zA-Z0-9_-]/g, '\\$&'); };
   }
-
-  function hasAppData() {
-    try { return (typeof appData !== 'undefined') && appData; }
-    catch (e) { return false; }
-  }
+  function hasAppData() { try { return (typeof appData !== 'undefined') && appData; } catch (e) { return false; } }
 
   const DELIVERY_FEE = 2000; // COP
 
-  // Carrito
   var cart = JSON.parse(localStorage.getItem('bdo_cart') || '[]');
 
-  // Para el modal de adiciones
-  var pendingProduct = null;  // { id, name, price }
+  // Para modal de adiciones
+  var pendingProduct = null; // { id, name, price, categoryId? }
   var pendingQty = 1;
 
-  // Para guardar ubicación del cliente
+  // Para geolocalización
   var clientLocation = null;
 
-  // Referencias básicas
   var $home = document.getElementById('home');
   var $vista = document.getElementById('vista');
   var orderModal = document.getElementById('orderModal');
@@ -54,13 +45,12 @@
     }).format(v || 0);
   }
 
-  // Normalización de datos (ej: Pizza Paisa a especial)
+  // Normalización de datos (Pizza Paisa -> especial, etc.)
   function normalizeData() {
     if (!hasAppData() || !appData.categories) return;
-    var pizzaCat = appData.categories.find(c => c.id === 'pizza');
+    var pizzaCat = appData.categories.find(function (c) { return c.id === 'pizza'; });
     if (!pizzaCat) return;
-
-    (pizzaCat.products || []).forEach(p => {
+    (pizzaCat.products || []).forEach(function (p) {
       var name = (p.name || '').toLowerCase();
       if (name.includes('paisa') && p.group !== 'especial') {
         p.group = 'especial';
@@ -77,22 +67,22 @@
       .trim();
   }
 
-  // Sabores permitidos para Estofados
+  // Sabores permitidos Estofados
   function isAllowedEstofadoFlavor(product) {
     var n = normalizeText(product && product.name);
     if (!n) return false;
-    if (n.includes('hawa')) return true;                                   // Hawaiana
-    if (n.includes('kabano') || n.includes('cabano')) return true;         // Kabano
-    if (n.includes('jamon') && n.includes('queso')) return true;           // Jamón y queso
-    if (n.includes('pollo') && (n.includes('champi') || n.includes('champin'))) return true; // Pollo champiñón
+    if (n.includes('hawa')) return true;
+    if (n.includes('kabano') || n.includes('cabano')) return true;
+    if (n.includes('jamon') && n.includes('queso')) return true;
+    if (n.includes('pollo') && (n.includes('champi') || n.includes('champin'))) return true;
     return false;
   }
 
   function animateCart() {
-    const cartIcon = qs('.cart-icon');
+    var cartIcon = qs('.cart-icon');
     if (!cartIcon) return;
     cartIcon.classList.add('highlight');
-    setTimeout(() => cartIcon.classList.remove('highlight'), 800);
+    setTimeout(function () { cartIcon.classList.remove('highlight'); }, 800);
   }
 
   // Routing
@@ -105,7 +95,6 @@
     addEventListeners();
     updateCartView();
   });
-
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     setTimeout(route, 0);
   }
@@ -113,7 +102,7 @@
   function initHeaderFooter() {
     try {
       if (hasAppData() && appData.config) {
-        var nameEl = qs('#pizzeriaName'); 
+        var nameEl = qs('#pizzeriaName');
         if (nameEl) nameEl.textContent = '🍕 ' + appData.config.pizzeriaName;
 
         var waEl = qs('#whatsappNumber');
@@ -140,7 +129,7 @@
       return;
     }
     var cats = (hasAppData() && appData.categories) ? appData.categories : [];
-    var cat = cats.find(c => String(c.id) === String(hash));
+    var cat = cats.find(function (c) { return String(c.id) === String(hash); });
     if (cat) {
       renderCategory(hash);
       showVista();
@@ -150,144 +139,123 @@
     }
   }
 
+
   function showHome() {
     if ($home) $home.classList.remove('hidden');
     if ($vista) $vista.classList.add('hidden');
     document.title = 'Menú – Bambino D’ Oro';
   }
-
   function showVista() {
     if ($home) $home.classList.add('hidden');
     if ($vista) $vista.classList.remove('hidden');
   }
 
-  // HOME
   function renderHome() {
     var cats = (hasAppData() && appData.categories) ? appData.categories : [];
     if (!$home) return;
-
-    $home.innerHTML = cats.map(c => (
-      '<a class="card" data-cat="' + c.id + '" href="#' + c.id + '">' +
+    $home.innerHTML = cats.map(function (c) {
+      return '<a class="card" data-cat="' + c.id + '" href="#' + c.id + '">' +
         '<span style="font-size:1.1rem;margin-right:.4rem">' + (c.icon || '') + '</span>' +
         (c.name || '') +
-      '</a>'
-    )).join('');
+      '</a>';
+    }).join('');
   }
 
-  // Categoría
- function renderCategory(catId) {
-  var categories = (hasAppData() && appData.categories) ? appData.categories : [];
-  var category = categories.find(function (c) { return String(c.id) === String(catId); });
-  if (!$vista) return;
+  function renderCategory(catId) {
+    var categories = (hasAppData() && appData.categories) ? appData.categories : [];
+    var category = categories.find(function (c) { return String(c.id) === String(catId); });
+    if (!$vista) return;
 
-  if (!category) {
-    $vista.innerHTML = '<p>No se encontró la categoría</p>';
-    return;
-  }
-
-  // 🔴 IMPORTANTE:
-  // Si los modales están dentro de #vista, al hacer innerHTML se borrarían.
-  // Antes de cambiar el contenido, los movemos al <body> para que nunca más se destruyan.
-  ['orderModal', 'pizzaBuilderModal', 'estofadoModal', 'addonsModal'].forEach(function (id) {
-    var el = document.getElementById(id);
-    if (el && el.parentNode === $vista) {
-      document.body.appendChild(el);  // los sacamos de #vista
+    if (!category) {
+      $vista.innerHTML = '<p>No se encontró la categoría</p>';
+      return;
     }
-  });
 
-  // Fondo de la sección
-  $vista.style.backgroundImage = "url('images/fondos/fondo-" + category.id + ".png')";
-  $vista.style.backgroundSize = "350px";
-  $vista.style.backgroundPosition = "center";
-  $vista.style.backgroundRepeat = "repeat";
-  $vista.style.backgroundAttachment = "fixed";
+    $vista.style.backgroundImage = "url('images/fondos/fondo-" + category.id + ".png')";
+    $vista.style.backgroundSize = "350px";
+    $vista.style.backgroundPosition = "center";
+    $vista.style.backgroundRepeat = "repeat";
+    $vista.style.backgroundAttachment = "fixed";
 
-  var products = category.products || [];
-  var gridId = 'grid-' + category.id;
+    var products = category.products || [];
+    var gridId = 'grid-' + category.id;
 
-  // Nueva lógica: separar Pizza Tamaños de Pizza porciones
-  var isPizzaPortions = category.id === 'pizza';          // pizzas individuales
-  var isPizzaSizes    = category.id === 'pizza-tamanos';  // sección donde vive el builder
+    var isPizzaPortions = category.id === 'pizza';
+    var isPizzaSizes = category.id === 'pizza-tamanos';
 
-  // El builder solo vive en Pizza Tamaños
-  var sizes = isPizzaSizes
-    ? ((hasAppData() && appData.pizzaOptions && appData.pizzaOptions.sizes) || [])
-    : [];
+    var sizes = isPizzaSizes
+      ? ((hasAppData() && appData.pizzaOptions && appData.pizzaOptions.sizes) || [])
+      : [];
 
-  // Tabs solo en Pizza porciones (tradicional / especial)
-  var tabsHtml = isPizzaPortions ? (
-    '<div class="tabs" role="tablist">' +
-      '<button class="tab active" data-group="tradicional" aria-selected="true">Individuales – Tradicionales</button>' +
-      '<button class="tab" data-group="especial">Individuales – Especiales</button>' +
-    '</div>'
-  ) : '';
+    var tabsHtml = isPizzaPortions ? (
+      '<div class="tabs" role="tablist">' +
+        '<button class="tab active" data-group="tradicional" aria-selected="true">Individuales – Tradicionales</button>' +
+        '<button class="tab" data-group="especial">Individuales – Especiales</button>' +
+      '</div>'
+    ) : '';
 
-  $vista.innerHTML =
-    '<button class="back" data-back>← Volver</button>' +
-    '<h2 class="chalk">' + category.name + ' <span class="badge"><span>•</span> ' + products.length + ' items</span></h2>' +
-    (sizes.length ?
-      '<section class="panel">' +
-        '<div class="panel-head">' +
-          '<h3 class="chalk">Arma tu Pizza</h3><small>Elige tamaño y sabor / mitad y mitad</small>' +
-        '</div>' +
-        '<div class="size-picker" id="sizesRow"></div>' +
-      '</section>' : ''
-    ) +
-    tabsHtml +
-    '<div class="items" id="' + gridId + '"></div>';
+    $vista.innerHTML =
+      '<button class="back" data-back>← Volver</button>' +
+      '<h2 class="chalk">' + category.name + ' <span class="badge"><span>•</span> ' + products.length + ' items</span></h2>' +
+      (sizes.length
+        ? '<section class="panel">' +
+            '<div class="panel-head">' +
+              '<h3 class="chalk">Arma tu Pizza</h3>' +
+              '<small>Elige tamaño y sabor / mitad y mitad</small>' +
+            '</div>' +
+            '<div class="size-picker" id="sizesRow"></div>' +
+          '</section>'
+        : ''
+      ) +
+      tabsHtml +
+      '<div class="items" id="' + gridId + '"></div>';
 
-  // Botones de tamaños (solo Pizza Tamaños)
-  if (sizes.length) {
-    var sr = qs('#sizesRow');
-    if (sr) {
-      sizes.forEach(function (s) {
-        var b = document.createElement('button');
-        b.className = 'size-btn';
+    if (sizes.length) {
+      var sr = qs('#sizesRow');
+      if (sr) {
+        sizes.forEach(function (s) {
+          var b = document.createElement('button');
+          b.className = 'size-btn';
+          b.setAttribute('data-builder-size', s.id);
+          if (s.image) {
+            b.classList.add('size-btn-has-image');
+            b.innerHTML =
+              '<img class="size-thumb" src="' + s.image + '" alt="' +
+                (s.label || ('Pizza ' + s.id)) + '" loading="lazy">' +
+              '<span class="size-label">' + s.label + '</span>';
+          } else {
+            b.textContent = s.label;
+          }
+          sr.appendChild(b);
+        });
+      }
+    }
 
-        if (s.image) {
-          b.classList.add('size-btn-has-image');
-          b.innerHTML =
-            '<img class="size-thumb" src="' + s.image + '" alt="' +
-            (s.label || ('Pizza ' + s.id)) + '" loading="lazy">' +
-            '<span class="size-label">' + s.label + '</span>';
-        } else {
-          b.textContent = s.label;
-        }
+    var grid = document.getElementById(gridId);
+    var initialGroup = isPizzaPortions ? 'tradicional' : null;
+    renderProductsGrid(grid, products, initialGroup);
 
-        b.addEventListener('click', function () { openPizzaBuilder(s.id); });
-        sr.appendChild(b);
+    if (isPizzaPortions) {
+      qsa('.tab', $vista).forEach(function (btn) {
+        btn.onclick = function () {
+          qsa('.tab', $vista).forEach(function (x) { x.classList.remove('active'); });
+          btn.classList.add('active');
+          var group = btn.getAttribute('data-group');
+          renderProductsGrid(grid, products, group);
+        };
       });
     }
+
+    document.title = category.name + ' – Bambino D’ Oro';
   }
-
-  var grid = document.getElementById(gridId);
-  var initialGroup = isPizzaPortions ? 'tradicional' : null;
-  renderProductsGrid(grid, products, initialGroup);
-
-  // Eventos de tabs solo para Pizza porciones
-  if (isPizzaPortions) {
-    qsa('.tab', $vista).forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        qsa('.tab', $vista).forEach(function (x) { x.classList.remove('active'); });
-        btn.classList.add('active');
-        var group = btn.getAttribute('data-group');
-        renderProductsGrid(grid, products, group);
-      });
-    });
-  }
-
-  document.title = category.name + ' – Bambino D’ Oro';
-}
-
 
   function renderProductsGrid(gridEl, products, groupFilter) {
     if (!gridEl) return;
     gridEl.innerHTML = '';
     var list = groupFilter
-      ? products.filter(p => p.group === groupFilter)
+      ? products.filter(function (p) { return p.group === groupFilter; })
       : products;
-
-    list.forEach(p => gridEl.appendChild(productCard(p)));
+    list.forEach(function (p) { gridEl.appendChild(productCard(p)); });
   }
 
   function productCard(p) {
@@ -318,15 +286,15 @@
     return el;
   }
 
-  // ======================================================================
+  // =========================
   // CARRITO
-  // ======================================================================
+  // =========================
 
   function findProductById(id) {
     var cats = (hasAppData() && appData.categories) ? appData.categories : [];
     for (var i = 0; i < cats.length; i++) {
       var c = cats[i];
-      var pr = (c.products || []).find(p => String(p.id) === String(id));
+      var pr = (c.products || []).find(function (p) { return String(p.id) === String(id); });
       if (pr) {
         if (!pr.categoryId) pr.categoryId = c.id;
         return pr;
@@ -355,7 +323,6 @@
     q = Math.max(1, Math.min(20, q + delta));
     label.textContent = String(q);
   }
-
   function getQty(id) {
     var label = qs('#quantity-' + CSS.escape(String(id)));
     return label ? parseInt(label.textContent || '1', 10) : 1;
@@ -363,7 +330,6 @@
 
   function openAdditionsModal() {
     if (!addonsModal || !pendingProduct) {
-      // Si algo falla, agregar directo
       if (pendingProduct) {
         cart.push({ product: pendingProduct, quantity: pendingQty });
         persistCart();
@@ -378,19 +344,18 @@
       return;
     }
 
-    // Render opciones
     var list = qs('#addonsList', addonsModal);
     if (!list) return;
 
     var catalog = getAdicionesCatalog();
-    list.innerHTML = catalog.map(a => (
-      '<label class="addon-option">' +
+    list.innerHTML = catalog.map(function (a) {
+      return '<label class="addon-option">' +
         '<input type="checkbox" data-addon-id="' + a.id + '">' +
         (a.icon ? '<span class="addon-icon">' + a.icon + '</span>' : '') +
         '<span class="addon-name">' + a.name + '</span>' +
         '<span class="addon-price">+' + money(a.price || 0) + '</span>' +
-      '</label>'
-    )).join('');
+      '</label>';
+    }).join('');
 
     addonsModal.style.display = 'grid';
     addonsModal.removeAttribute('hidden');
@@ -417,10 +382,10 @@
     var chosen = [];
     var extraTotal = 0;
 
-    checks.forEach(ch => {
+    checks.forEach(function (ch) {
       if (!ch.checked) return;
       var id = ch.getAttribute('data-addon-id');
-      var info = catalog.find(a => String(a.id) === String(id));
+      var info = catalog.find(function (a) { return String(a.id) === String(id); });
       if (!info) return;
       chosen.push(info);
       extraTotal += info.price || 0;
@@ -434,7 +399,7 @@
 
     if (chosen.length) {
       var extrasText = chosen
-        .map(a => 'adición de ' + a.name.toLowerCase())
+        .map(function (a) { return 'adición de ' + a.name.toLowerCase(); })
         .join(' + ');
       finalProduct.name += ' + ' + extrasText;
     }
@@ -457,7 +422,6 @@
     var p = findProductById(id);
     if (!p) return;
 
-    // Estofado abre builder propio
     if (p.type === 'estofado') {
       openEstofadoBuilder(p);
       return;
@@ -468,7 +432,7 @@
     if (qtyLabel) qtyLabel.textContent = '1';
 
     if (!productAllowsAdiciones(p)) {
-      var existing = cart.find(i => String(i.product.id) === String(id));
+      var existing = cart.find(function (i) { return String(i.product.id) === String(id); });
       if (existing) existing.quantity += qty;
       else cart.push({ product: { id: p.id, name: p.name, price: p.price || 0 }, quantity: qty });
 
@@ -481,7 +445,6 @@
       return;
     }
 
-    // Producto con adiciones
     pendingProduct = { id: p.id, name: p.name, price: p.price || 0, categoryId: p.categoryId };
     pendingQty = qty;
     openAdditionsModal();
@@ -503,11 +466,12 @@
   }
 
   function totalItems() {
-    return cart.reduce((s, i) => s + i.quantity, 0);
+    return cart.reduce(function (s, i) { return s + i.quantity; }, 0);
   }
-
   function totalAmount() {
-    return cart.reduce((s, i) => s + ((i.product.price || 0) * i.quantity), 0);
+    return cart.reduce(function (s, i) {
+      return s + ((i.product.price || 0) * i.quantity);
+    }, 0);
   }
 
   function updateCartView() {
@@ -531,7 +495,7 @@
 
     if (btn) btn.disabled = false;
 
-    cart.forEach((it, idx) => {
+    cart.forEach(function (it, idx) {
       var row = document.createElement('div');
       row.className = 'cart-item';
       row.innerHTML =
@@ -547,27 +511,14 @@
   }
 
   function persistCart() {
-    try { localStorage.setItem('bdo_cart', JSON.stringify(cart)); }
-    catch (e) {}
+    try { localStorage.setItem('bdo_cart', JSON.stringify(cart)); } catch (e) {}
   }
 
-  // ======================================================================
+  // =========================
   // CHECKOUT / WHATSAPP
-  // ======================================================================
+  // =========================
 
-  function getAddons() {
-    if (!hasAppData()) return [];
-    if (Array.isArray(appData.addones)) return appData.addones; // por si acaso
-    if (Array.isArray(appData.addons)) return appData.addons;
-    return [];
-  }
-
-  function addonsSubtotal() {
-    // Nota: en este modelo, las adiciones se suman directo al producto,
-    // así que aquí no usamos un subtotal aparte. Si quieres manejar
-    // adiciones globales, puedes extender esta función.
-    return 0;
-  }
+  function addonsSubtotal() { return 0; }
 
   function openOrderModal() {
     if (!cart.length) {
@@ -581,7 +532,6 @@
       trapFocus(orderModal);
     }
   }
-
   function closeOrderModal() {
     if (orderModal) {
       orderModal.style.display = 'none';
@@ -590,8 +540,6 @@
     }
     var f = qs('#orderForm');
     if (f) f.reset();
-    var nw = qs('#nequiWarning');
-    if (nw) nw.hidden = true;
   }
 
   function orderTotal() {
@@ -604,7 +552,7 @@
 
     var html = '<h3>Resumen de tu pedido:</h3>';
 
-    cart.forEach(it => {
+    cart.forEach(function (it) {
       html += '<div class="order-summary-item">' +
         '<span>' + it.quantity + 'x ' + it.product.name + '</span>' +
         '<span>' + money((it.product.price || 0) * it.quantity) + '</span>' +
@@ -622,6 +570,12 @@
     box.innerHTML = html;
   }
 
+  function normalizeWhatsAppNumber(raw) {
+    var digits = String(raw || '').replace(/\D/g, '');
+    if (digits.length === 10) return '57' + digits;
+    return digits;
+  }
+
   function buildWhatsAppMessage(form) {
     var name = hasAppData() && appData.config && appData.config.pizzeriaName
       ? appData.config.pizzeriaName
@@ -630,7 +584,7 @@
     var msg = '¡Hola! Quiero hacer un pedido de ' + name + ':\n\n';
     msg += '*DETALLE DEL PEDIDO:*\n';
 
-    cart.forEach(it => {
+    cart.forEach(function (it) {
       msg += '- ' + it.quantity + 'x ' + it.product.name + ': ' +
         money((it.product.price || 0) * it.quantity) + '\n';
     });
@@ -659,12 +613,6 @@
 
     msg += '\n¡Gracias!';
     return encodeURIComponent(msg);
-  }
-
-  function normalizeWhatsAppNumber(raw) {
-    var digits = String(raw || '').replace(/\D/g, '');
-    if (digits.length === 10) return '57' + digits;
-    return digits;
   }
 
   function sendOrderToWhatsApp(form) {
@@ -705,7 +653,7 @@
       if (warningBox) {
         warningBox.textContent = 'Por favor completa todos los campos obligatorios.';
         warningBox.hidden = false;
-        setTimeout(() => { warningBox.hidden = true; }, 3000);
+        setTimeout(function () { warningBox.hidden = true; }, 3000);
       }
       return;
     }
@@ -718,573 +666,209 @@
   }
 
   // ======================================================================
-  // PIZZA BUILDER (Pizza Tamaños)
-  // ======================================================================
+// ESTOFADOS BUILDER
+// ======================================================================
 
-  var builder = {
-    size: null,
-    slices: null,
-    mode: 'tradicional', // 'tradicional' | 'especial' | 'mixta'
-    qty: 1,
-    saborTrad: null,
-    saborEsp: null,
-    mitad1: null,
-    mitad2: null
-  };
+var estofado = {
+  baseProduct: null,
+  qty: 1,
+  s1: null,
+  s2: null
+};
 
-  function getPizzaCategory() {
-    var cats = (hasAppData() && appData.categories) ? appData.categories : [];
-    return cats.find(c => c.id === 'pizza');
+function openEstofadoBuilder(product) {
+  estofado.baseProduct = product;
+  estofado.qty = 1;
+  estofado.s1 = null;
+  estofado.s2 = null;
+
+  renderEstofadoBuilder();
+
+  if (estofadoModal) {
+    estofadoModal.style.display = 'grid';
+    estofadoModal.removeAttribute('hidden');
+    trapFocus(estofadoModal);
+  }
+}
+
+function closeEstofadoBuilder() {
+  if (estofadoModal) {
+    estofadoModal.style.display = 'none';
+    estofadoModal.setAttribute('hidden', '');
+    releaseTrap(estofadoModal);
+  }
+  // limpiamos estado por si acaso
+  estofado.baseProduct = null;
+  estofado.qty = 1;
+  estofado.s1 = null;
+  estofado.s2 = null;
+}
+
+function renderEstofadoBuilder() {
+  // 1) Tomamos todas las pizzas de la categoría "pizza"
+  var pizzaCat = getPizzaCategory();
+  var all = [];
+  if (pizzaCat && Array.isArray(pizzaCat.products)) {
+    all = pizzaCat.products.slice();
   }
 
-  function openPizzaBuilder(sizeId) {
-    builder.size = sizeId;
-    builder.slices = null;
-    builder.mode = 'tradicional';
-    builder.qty = 1;
-    builder.saborTrad = null;
-    builder.saborEsp = null;
-    builder.mitad1 = null;
-    builder.mitad2 = null;
+  // 2) Permitimos SOLO estos IDs:
+  // 1: Hawaiana, 2: Pollo con champiñón, 3: Kabano
+  var allowedIds = [1, 2, 3];
 
-    renderBuilder(); // pinta selects y tabs
-    if (pizzaModal) {
-      pizzaModal.style.display = 'grid';
-      pizzaModal.removeAttribute('hidden');
-      trapFocus(pizzaModal);
-    }
-  }
+  var allowed = all.filter(function (p) {
+    return allowedIds.indexOf(Number(p.id)) !== -1;
+  });
 
-  function closePizzaBuilder() {
-    if (pizzaModal) {
-      pizzaModal.style.display = 'none';
-      pizzaModal.setAttribute('hidden', '');
-      releaseTrap(pizzaModal);
-    }
-  }
+  var sel1 = qs('#selectEst1');
+  var sel2 = qs('#selectEst2');
 
-  function renderBuilder() {
-    renderBuilderSizePicker();
-    renderSliceOptions();
-    renderBuilderSelectors();
-    updateBuilderView();
-  }
-
-  function renderBuilderSizePicker() {
-    var cont = qs('#sizePicker');
-    if (!cont) return;
-    cont.innerHTML = '';
-
-    var sizes = (hasAppData() && appData.pizzaOptions && appData.pizzaOptions.sizes)
-      ? appData.pizzaOptions.sizes
-      : [];
-
-    sizes.forEach(s => {
-      var b = document.createElement('button');
-      b.className = 'size-btn' + (builder.size === s.id ? ' active' : '');
-      b.textContent = s.label;
-      b.onclick = function () {
-        builder.size = s.id;
-        builder.slices = null;
-        builder.saborTrad = null;
-        builder.saborEsp = null;
-        builder.mitad1 = null;
-        builder.mitad2 = null;
-        renderBuilder();
-      };
-      cont.appendChild(b);
+  function fillSelect(sel) {
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Selecciona un sabor</option>';
+    allowed.forEach(function (p) {
+      var opt = document.createElement('option');
+      opt.value = String(p.id);
+      opt.textContent = p.name;
+      sel.appendChild(opt);
     });
   }
 
-  function renderSliceOptions() {
-    var cont = qs('#sliceOptions');
-    if (!cont) return;
-    cont.innerHTML = '';
+  fillSelect(sel1);
+  fillSelect(sel2);
 
-    var list =
-      hasAppData() &&
-      appData.pizzaOptions &&
-      appData.pizzaOptions.slices &&
-      appData.pizzaOptions.slices[builder.size]
-        ? appData.pizzaOptions.slices[builder.size]
-        : [];
-
-    list.forEach(num => {
-      var b = document.createElement('button');
-      b.className = 'slice-btn' + (builder.slices === num ? ' active' : '');
-      b.textContent = num + ' porciones';
-      b.onclick = function () {
-        builder.slices = num;
-        renderSliceOptions();
-        updateBuilderView();
-      };
-      cont.appendChild(b);
-    });
-  }
-
-  function renderBuilderSelectors() {
-    var pizza = getPizzaCategory() || { products: [] };
-    var trad = (pizza.products || []).filter(p => p.group === 'tradicional');
-    var esp = (pizza.products || []).filter(p => p.group === 'especial');
-
-    var selTrad = qs('#selectTradicional');
-    var selEsp = qs('#selectEspecial');
-    var selM1 = qs('#selectMixta1');
-    var selM2 = qs('#selectMixta2');
-
-    function fillBasic(el, arr, selectedId) {
-      if (!el) return;
-      el.innerHTML = '<option value="">Selecciona un sabor</option>';
-      (arr || []).forEach(p => {
-        var o = document.createElement('option');
-        o.value = String(p.id);
-        o.textContent = p.name + ' (' + money(p.price) + ')';
-        if (selectedId && String(p.id) === String(selectedId)) o.selected = true;
-        el.appendChild(o);
-      });
-    }
-
-    function fillMixtaSelect(el, excludeId, selectedId) {
-      if (!el) return;
-      el.innerHTML = '<option value="">Selecciona un sabor</option>';
-
-      function appendGroup(label, list) {
-        if (!list || !list.length) return;
-        var og = document.createElement('optgroup');
-        og.label = label;
-        list.forEach(p => {
-          if (excludeId && String(p.id) === String(excludeId)) return;
-          var o = document.createElement('option');
-          o.value = String(p.id);
-          o.textContent = p.name + ' (' + money(p.price) + ')';
-          if (selectedId && String(p.id) === String(selectedId)) o.selected = true;
-          og.appendChild(o);
-        });
-        el.appendChild(og);
-      }
-
-      appendGroup('Tradicionales', trad);
-      appendGroup('Especiales', esp);
-    }
-
-    function fillMixtaBoth() {
-      fillMixtaSelect(selM1, builder.mitad2, builder.mitad1);
-      fillMixtaSelect(selM2, builder.mitad1, builder.mitad2);
-    }
-
-    fillBasic(selTrad, trad, builder.saborTrad);
-    fillBasic(selEsp, esp, builder.saborEsp);
-    fillMixtaBoth();
-
-    if (selTrad) {
-      selTrad.onchange = function () {
-        builder.saborTrad = selTrad.value || null;
-        updateBuilderView();
-      };
-    }
-
-    if (selEsp) {
-      selEsp.onchange = function () {
-        builder.saborEsp = selEsp.value || null;
-        updateBuilderView();
-      };
-    }
-
-    if (selM1) {
-      selM1.onchange = function () {
-        var val = selM1.value || null;
-        if (val && val === builder.mitad2) builder.mitad2 = null;
-        builder.mitad1 = val;
-        fillMixtaBoth();
-        updateBuilderView();
-      };
-    }
-
-    if (selM2) {
-      selM2.onchange = function () {
-        var val = selM2.value || null;
-        if (val && val === builder.mitad1) builder.mitad1 = null;
-        builder.mitad2 = val;
-        fillMixtaBoth();
-        updateBuilderView();
-      };
-    }
-
-    var scope = pizzaModal || document;
-
-    // Tabs: tradicional / especial / mixta
-    qsa('.tab-btn', scope).forEach(btn => {
-      btn.onclick = function () {
-        qsa('.tab-btn', scope).forEach(x => x.classList.remove('active'));
-        btn.classList.add('active');
-
-        builder.mode = btn.getAttribute('data-tab');
-
-        qsa('.tab-content', scope).forEach(c => c.classList.add('hidden'));
-        var target = qs('#tab-' + builder.mode, scope);
-        if (target) target.classList.remove('hidden');
-
-        updateBuilderView();
-      };
-    });
-
-    // Mostrar u ocultar Mixta según tamaño
-    var mixtaTab = qs('.tab-btn[data-tab="mixta"]', scope);
-    var mixtaContent = qs('#tab-mixta', scope);
-    var mixtaAllowed = (builder.size === 'familiar' || builder.size === 'mediana' || builder.size === 'junior');
-
-    if (mixtaTab && mixtaContent) {
-      if (!mixtaAllowed) {
-        mixtaTab.classList.add('hidden');
-        mixtaContent.classList.add('hidden');
-
-        if (builder.mode === 'mixta') {
-          builder.mode = 'tradicional';
-          qsa('.tab-btn', scope).forEach(b => {
-            var t = b.getAttribute('data-tab');
-            if (t === 'tradicional') b.classList.add('active');
-            else b.classList.remove('active');
-          });
-          qsa('.tab-content', scope).forEach(c => c.classList.add('hidden'));
-          var tabTrad = qs('#tab-tradicional', scope);
-          if (tabTrad) tabTrad.classList.remove('hidden');
-        }
-      } else {
-        mixtaTab.classList.remove('hidden');
-      }
-    }
-
-    var minus = qs('#builderQtyMinus');
-    var plus = qs('#builderQtyPlus');
-    var add = qs('#builderAddBtn');
-
-    if (minus) minus.onclick = function () {
-      builder.qty = Math.max(1, builder.qty - 1);
-      updateBuilderView();
+  if (sel1) {
+    sel1.onchange = function () {
+      estofado.s1 = sel1.value || null;
+      updateEstofadoView();
     };
+  }
 
-    if (plus) plus.onclick = function () {
-      builder.qty = Math.min(20, builder.qty + 1);
-      updateBuilderView();
+  if (sel2) {
+    sel2.onchange = function () {
+      estofado.s2 = sel2.value || null;
+      updateEstofadoView();
     };
-
-    if (add) add.onclick = addBuilderPizzaToCart;
-
-    qsa('.builder-close').forEach(b => {
-      b.onclick = closePizzaBuilder;
-    });
   }
 
-  // Helper: grupo tradicional/especial de una pizza por ID
-  function getPizzaGroupById(id) {
-    if (!id) return null;
-    var p = findProductById(id);
-    return p ? (p.group || null) : null;
+  var info = qs('#estofadoInfo');
+  if (info && estofado.baseProduct) {
+    info.textContent = estofado.baseProduct.description || '';
   }
 
-  // Leer SIEMPRE lo que está en los selects para sincronizar builder
-  function syncBuilderFromDOM() {
-    var scope = pizzaModal || document;
-
-    var selTrad = qs('#selectTradicional', scope);
-    var selEsp = qs('#selectEspecial', scope);
-    var selM1 = qs('#selectMixta1', scope);
-    var selM2 = qs('#selectMixta2', scope);
-
-    if (selTrad) builder.saborTrad = selTrad.value || null;
-    if (selEsp) builder.saborEsp = selEsp.value || null;
-    if (selM1) builder.mitad1 = selM1.value || null;
-    if (selM2) builder.mitad2 = selM2.value || null;
-  }
-
-  function computeBuilderPrice() {
-    var sizeTable =
-      hasAppData() &&
-      appData.pizzaOptions &&
-      appData.pizzaOptions.sizePrices;
-
-    if (!sizeTable || !builder.size || !sizeTable[builder.size]) return 0;
-
-    var t = sizeTable[builder.size]; // { tradicional, especial, mixta }
-    var price = 0;
-
-    // Tradicional / Especial completa
-    if (builder.mode === 'tradicional') {
-      if (!builder.saborTrad) return 0;
-      price = t.tradicional || 0;
-
-    } else if (builder.mode === 'especial') {
-      if (!builder.saborEsp) return 0;
-      price = t.especial || 0;
-
-    // Mixta
-    } else if (builder.mode === 'mixta') {
-      if (!builder.mitad1 || !builder.mitad2) return 0;
-
-      var g1 = getPizzaGroupById(builder.mitad1); // "tradicional" / "especial"
-      var g2 = getPizzaGroupById(builder.mitad2);
-      if (!g1 || !g2) return 0;
-
-      if (g1 === 'tradicional' && g2 === 'tradicional') {
-        price = t.tradicional || 0; // Trad + Trad
-      } else if (g1 === 'especial' && g2 === 'especial') {
-        price = t.especial || 0;     // Esp + Esp
-      } else {
-        // Trad + Esp
-        if (typeof t.mixta === 'number' && t.mixta > 0) {
-          price = t.mixta;
-        } else {
-          price = Math.round(((t.tradicional || 0) + (t.especial || 0)) / 2);
-        }
-      }
-    }
-
-    if (!price) return 0;
-
-    // Recargo Pepperoni
-    function pepperoniExtra(size) {
-      if (size === 'familiar') return 2000;
-      if (size === 'mediana') return 1000;
-      if (size === 'junior') return 1000;
-      return 0;
-    }
-
-    function isPepperoni(id) {
-      if (!id) return false;
-      var p = findProductById(id);
-      if (!p) return false;
-      var n = (p.name || '').toLowerCase();
-      return n.includes('pepperoni') || n.includes('peperoni');
-    }
-
-    if (builder.mode === 'mixta') {
-      if (isPepperoni(builder.mitad1) || isPepperoni(builder.mitad2)) {
-        price += pepperoniExtra(builder.size);
-      }
+  var modalImgBox = qs('#estofadoImageBox');
+  if (modalImgBox) {
+    if (estofado.baseProduct && estofado.baseProduct.image) {
+      modalImgBox.innerHTML =
+        '<img src="' + estofado.baseProduct.image +
+        '" alt="' + estofado.baseProduct.name + '" class="estofado-img">';
     } else {
-      if (isPepperoni(builder.saborTrad) || isPepperoni(builder.saborEsp)) {
-        price += pepperoniExtra(builder.size);
-      }
-    }
-
-    return price;
-  }
-
-  function pickName(id) {
-    var p = findProductById(id);
-    return p ? p.name : '';
-  }
-
-  function updateBuilderView() {
-    // Primero sincronizamos con los selects actuales
-    syncBuilderFromDOM();
-
-    var sizes =
-      hasAppData() &&
-      appData.pizzaOptions &&
-      appData.pizzaOptions.sizes
-        ? appData.pizzaOptions.sizes
-        : [];
-
-    var sizeObj = sizes.find(s => s.id === builder.size);
-    var sizeLabel = sizeObj ? sizeObj.label : '';
-
-    var detail = '';
-    if (builder.mode === 'tradicional') {
-      detail = pickName(builder.saborTrad);
-    } else if (builder.mode === 'especial') {
-      detail = pickName(builder.saborEsp);
-    } else if (builder.mode === 'mixta') {
-      detail = '1/2 ' + pickName(builder.mitad1) + ' + 1/2 ' + pickName(builder.mitad2);
-    }
-
-    var slicesText = builder.slices ? ' • ' + builder.slices + ' porciones' : '';
-
-    var nameEl = qs('#builderName');
-    if (nameEl) nameEl.textContent = 'Pizza ' + sizeLabel;
-
-    var detEl = qs('#builderDetail');
-    if (detEl) detEl.textContent = (detail || 'Selecciona un sabor') + slicesText;
-
-    var qtyEl = qs('#builderQty');
-    if (qtyEl) qtyEl.textContent = String(builder.qty);
-
-    var priceEl = qs('#builderPrice');
-    if (priceEl) priceEl.textContent = money(computeBuilderPrice() * builder.qty);
-  }
-
-  function addBuilderPizzaToCart() {
-    var price = computeBuilderPrice();
-    if (!price) {
-      if (typeof toast === 'function') toast('Selecciona un sabor');
-      return;
-    }
-
-    var sizes =
-      hasAppData() &&
-      appData.pizzaOptions &&
-      appData.pizzaOptions.sizes
-        ? appData.pizzaOptions.sizes
-        : [];
-
-    var sizeObj = sizes.find(s => s.id === builder.size);
-    var sizeLabel = sizeObj ? sizeObj.label : '';
-
-    var name = 'Pizza ' + sizeLabel + ' - ';
-    if (builder.mode === 'tradicional') {
-      name += pickName(builder.saborTrad);
-    } else if (builder.mode === 'especial') {
-      name += pickName(builder.saborEsp);
-    } else if (builder.mode === 'mixta') {
-      name += '1/2 ' + pickName(builder.mitad1) + ' + 1/2 ' + pickName(builder.mitad2);
-    }
-
-    if (builder.slices) {
-      name += ' (' + builder.slices + ' porciones)';
-    }
-
-    var baseProduct = {
-      id: 'b-' + Date.now(),
-      name: name,
-      price: price
-    };
-
-    pendingProduct = baseProduct;
-    pendingQty = builder.qty;
-
-    closePizzaBuilder();
-    openAdditionsModal();
-  }
-
-  // ======================================================================
-  // ESTOFADOS BUILDER
-  // ======================================================================
-
-  var estofado = {
-    baseProduct: null,
-    qty: 1,
-    s1: null,
-    s2: null
-  };
-
-  function openEstofadoBuilder(product) {
-    estofado.baseProduct = product;
-    estofado.qty = 1;
-    estofado.s1 = null;
-    estofado.s2 = null;
-
-    renderEstofadoBuilder();
-
-    if (estofadoModal) {
-      estofadoModal.style.display = 'grid';
-      estofadoModal.removeAttribute('hidden');
-      trapFocus(estofadoModal);
+      modalImgBox.innerHTML = '<div class="no-image">Sin imagen disponible</div>';
     }
   }
 
-  function closeEstofadoBuilder() {
-    if (estofadoModal) {
-      estofadoModal.style.display = 'none';
-      estofadoModal.setAttribute('hidden', '');
-      releaseTrap(estofadoModal);
-    }
-  }
+  var minus = qs('#estofadoQtyMinus');
+  var plus = qs('#estofadoQtyPlus');
+  var add = qs('#estofadoAddBtn');
 
-  function renderEstofadoBuilder() {
-    var pizza = getPizzaCategory() || { products: [] };
-    var trad = (pizza.products || []).filter(p => p.group === 'tradicional');
-    var esp = (pizza.products || []).filter(p => p.group === 'especial');
-    var all = trad.concat(esp);
-    var allowed = all.filter(isAllowedEstofadoFlavor);
-
-    var sel1 = qs('#selectEst1');
-    var sel2 = qs('#selectEst2');
-
-    function fill(el) {
-      if (!el) return;
-      el.innerHTML = '<option value="">Selecciona un sabor</option>';
-      allowed.forEach(p => {
-        var o = document.createElement('option');
-        o.value = String(p.id);
-        o.textContent = p.name;
-        el.appendChild(o);
-      });
-    }
-
-    fill(sel1);
-    fill(sel2);
-
-    if (sel1) {
-      sel1.onchange = function () {
-        estofado.s1 = sel1.value || null;
-        updateEstofadoView();
-      };
-    }
-    if (sel2) {
-      sel2.onchange = function () {
-        estofado.s2 = sel2.value || null;
-        updateEstofadoView();
-      };
-    }
-
-    var info = qs('#estofadoInfo');
-    if (info && estofado.baseProduct) {
-      info.textContent = estofado.baseProduct.description || '';
-    }
-
-    var modalImgBox = qs('#estofadoImageBox');
-    if (modalImgBox) {
-      if (estofado.baseProduct && estofado.baseProduct.image) {
-        modalImgBox.innerHTML =
-          '<img src="' + estofado.baseProduct.image +
-          '" alt="' + estofado.baseProduct.name + '" class="estofado-img">';
-      } else {
-        modalImgBox.innerHTML = '<div class="no-image">Sin imagen disponible</div>';
-      }
-    }
-
-    var minus = qs('#estofadoQtyMinus');
-    var plus = qs('#estofadoQtyPlus');
-    var add = qs('#estofadoAddBtn');
-
-    if (minus) minus.onclick = function () {
+  if (minus) {
+    minus.onclick = function () {
       estofado.qty = Math.max(1, estofado.qty - 1);
       updateEstofadoView();
     };
+  }
 
-    if (plus) plus.onclick = function () {
+  if (plus) {
+    plus.onclick = function () {
       estofado.qty = Math.min(20, estofado.qty + 1);
       updateEstofadoView();
     };
-
-    if (add) add.onclick = addEstofadoToCart;
-
-    qsa('.estofado-close').forEach(b => {
-      b.onclick = closeEstofadoBuilder;
-    });
-
-    updateEstofadoView();
   }
 
-  function updateEstofadoView() {
-    var n1 = pickName(estofado.s1);
-    var n2 = pickName(estofado.s2);
-
-    var nameEl = qs('#estofadoName');
-    if (nameEl) nameEl.textContent = estofado.baseProduct ? estofado.baseProduct.name : 'Estofado';
-
-    var detEl = qs('#estofadoDetail');
-    if (detEl) detEl.textContent =
-      (n1 && n2) ? (n1 + ' + ' + n2) : 'Elige 2 sabores';
-
-    var qtyEl = qs('#estofadoQty');
-    if (qtyEl) qtyEl.textContent = String(estofado.qty);
-
-    var priceEl = qs('#estofadoPrice');
-    if (priceEl) priceEl.textContent = money(
-      (estofado.baseProduct ? (estofado.baseProduct.price || 0) : 0) * estofado.qty
-    );
+  if (add) {
+    add.onclick = addEstofadoToCart;
   }
+
+  qsa('.estofado-close').forEach(function (b) {
+    b.onclick = closeEstofadoBuilder;
+  });
+
+  updateEstofadoView();
+}
+
+function updateEstofadoView() {
+  // pickName debe existir ya en tu script (lo usabas en estofado antes).
+  // Si no, podemos reemplazarlo por un get simple.
+  var n1 = pickName(estofado.s1);
+  var n2 = pickName(estofado.s2);
+
+  var nameEl = qs('#estofadoName');
+  if (nameEl) {
+    nameEl.textContent = estofado.baseProduct ? estofado.baseProduct.name : 'Estofado';
+  }
+
+  var detEl = qs('#estofadoDetail');
+  if (detEl) {
+    detEl.textContent = (n1 && n2) ? (n1 + ' + ' + n2) : 'Elige 2 sabores';
+  }
+
+  var qtyEl = qs('#estofadoQty');
+  if (qtyEl) {
+    qtyEl.textContent = String(estofado.qty);
+  }
+
+  var priceEl = qs('#estofadoPrice');
+  if (priceEl) {
+    var basePrice = estofado.baseProduct ? (estofado.baseProduct.price || 0) : 0;
+    priceEl.textContent = money(basePrice * estofado.qty);
+  }
+}
+
+function addEstofadoToCart() {
+  if (!estofado.baseProduct) return;
+  if (!estofado.s1 || !estofado.s2) {
+    if (typeof toast === 'function') toast('Elige los 2 sabores');
+    return;
+  }
+
+  var n1 = pickName(estofado.s1);
+  var n2 = pickName(estofado.s2);
+
+  var name = estofado.baseProduct.name + ' - ' + n1 + ' + ' + n2;
+  var price = estofado.baseProduct.price || 0;
+
+  var baseProduct = { id: 'e-' + Date.now(), name: name, price: price };
+
+  pendingProduct = baseProduct;
+  pendingQty = estofado.qty;
+
+  closeEstofadoBuilder();
+  openAdditionsModal();
+}
+
+
+function getPizzaCategory() {
+  try {
+    if (typeof appData === 'undefined' || !appData || !Array.isArray(appData.categories)) {
+      return null;
+    }
+    return appData.categories.find(function (c) {
+      return c.id === 'pizza';
+    }) || null;
+  } catch (e) {
+    console.error('getPizzaCategory error:', e);
+    return null;
+  }
+}
+
+function pickName(productId) {
+  if (!productId) return '';
+  var p = findProductById(productId);
+  return p && p.name ? p.name : '';
+}
+
+
+
 
   function addEstofadoToCart() {
     if (!estofado.baseProduct) return;
@@ -1307,9 +891,480 @@
     openAdditionsModal();
   }
 
-  // ======================================================================
+  // =========================
+  // PIZZA BUILDER (Tamaños)
+  // =========================
+
+  // ================== PIZZA BUILDER =====================
+var builder = {
+  size: null,
+  slices: null,
+  mode: 'tradicional', // 'tradicional' | 'especial' | 'mixta'
+  qty: 1,
+  saborTrad: null,
+  saborEsp: null,
+  mitad1: null,
+  mitad2: null
+};
+
+// Dejar el builder en estado "nuevo"
+function resetBuilderState(sizeId) {
+  builder.size = sizeId || null;
+  builder.slices = null;
+  builder.mode = 'tradicional';  // siempre arrancamos en tradicional
+  builder.qty = 1;
+  builder.saborTrad = null;
+  builder.saborEsp = null;
+  builder.mitad1 = null;
+  builder.mitad2 = null;
+}
+
+
+  function openPizzaBuilder(sizeId) {
+  // Estado interno limpio SIEMPRE
+  builder.size = sizeId;
+  builder.slices = null;
+  builder.mode = 'tradicional';
+  builder.qty = 1;
+  builder.saborTrad = builder.saborEsp = builder.mitad1 = builder.mitad2 = null;
+
+  // Limpiar selects visualmente
+  ['#selectTradicional', '#selectEspecial', '#selectMixta1', '#selectMixta2'].forEach(function (id) {
+    var sel = qs(id);
+    if (sel) sel.selectedIndex = 0;
+  });
+
+  // Volver a pintar resumen + precio
+  renderBuilder();
+
+  // ⬅️ Aquí sincronizamos pestañas y contenido con el modo real
+  syncBuilderTabsAndContent();
+
+  // Mostrar modal
+  if (pizzaModal) {
+    pizzaModal.style.display = 'grid';
+    pizzaModal.removeAttribute('hidden');
+    trapFocus(pizzaModal);
+    bindOutsideOnce(pizzaModal, closePizzaBuilder);
+  }
+}
+
+
+  function syncBuilderTabsAndContent() {
+  var currentMode = builder.mode; // 'tradicional' | 'especial' | 'mixta'
+
+  // Botones de pestañas
+  var tabs = qsa('#pizzaBuilderModal .builder-tabs .tab-btn');
+  tabs.forEach(function (btn) {
+    var tabName = btn.getAttribute('data-tab'); // tradicional / especial / mixta
+    var isActive = (tabName === currentMode);
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+
+  // Contenidos
+  var tradContent = qs('#tab-tradicional');
+  var espContent  = qs('#tab-especial');
+  var mixContent  = qs('#tab-mixta');
+
+  if (tradContent) tradContent.classList.toggle('hidden', currentMode !== 'tradicional');
+  if (espContent)  espContent.classList.toggle('hidden', currentMode !== 'especial');
+  if (mixContent)  mixContent.classList.toggle('hidden', currentMode !== 'mixta');
+}
+
+
+  function closePizzaBuilder() {
+  if (pizzaModal) {
+    pizzaModal.style.display = 'none';
+    pizzaModal.setAttribute('hidden', '');
+    releaseTrap(pizzaModal);
+  }
+
+  builder.size = null;
+  builder.slices = null;
+  builder.mode = 'tradicional';
+  builder.qty = 1;
+  builder.saborTrad = builder.saborEsp = builder.mitad1 = builder.mitad2 = null;
+
+  // Dejamos el builder listo para la próxima vez
+  resetBuilderState(null);
+}
+
+
+  function renderBuilder() {
+    renderBuilderSizePicker();
+    renderSliceOptions();
+    renderBuilderSelectors();
+    updateBuilderView();
+  }
+
+  function renderBuilderSizePicker() {
+  var cont = qs('#sizePicker'); 
+  if (!cont) return;
+
+  cont.innerHTML = '';
+
+  var sizes = (hasAppData() && appData.pizzaOptions && appData.pizzaOptions.sizes)
+    ? appData.pizzaOptions.sizes
+    : [];
+
+  sizes.forEach(function (s) {
+    var b = document.createElement('button');
+    b.className = 'size-btn' + (builder.size === s.id ? ' active' : '');
+    b.textContent = s.label;
+
+    b.addEventListener('click', function () {
+      // ⬇️ Cambio de tamaño = reset total del builder
+      builder.size = s.id;
+      builder.slices = null;
+
+      // Siempre arrancamos en TRADICIONAL al cambiar de tamaño
+      builder.mode = 'tradicional';
+      builder.saborTrad = null;
+      builder.saborEsp = null;
+      builder.mitad1 = null;
+      builder.mitad2 = null;
+      builder.qty = 1;
+
+      renderBuilder();      // vuelve a pintar tabs, selects y precio
+    });
+
+    cont.appendChild(b);
+  });
+}
+
+
+  function renderSliceOptions() {
+    var cont = qs('#sliceOptions');
+    if (!cont) return;
+    cont.innerHTML = '';
+    var list = (hasAppData() && appData.pizzaOptions && appData.pizzaOptions.slices &&
+      appData.pizzaOptions.slices[builder.size]) || [];
+    list.forEach(function (num) {
+      var b = document.createElement('button');
+      b.className = 'slice-btn' + (builder.slices === num ? ' active' : '');
+      b.textContent = num + ' porciones';
+      b.addEventListener('click', function () {
+        builder.slices = num;
+        renderSliceOptions();
+        updateBuilderView();
+      });
+      cont.appendChild(b);
+    });
+  }
+
+    function renderBuilderSelectors() {
+    var pizza = getPizzaCategory() || { products: [] };
+    var allProducts = pizza.products || [];
+
+    // === IDs permitidos para Pizza Tamaños ===
+    // Tradicionales
+    var allowedTradIds = [1, 2, 3, 4, 5, 6];
+    // Especiales
+    var allowedEspIds  = [7, 8, 9, 10, 11, 12, 13, 14, 39];
+
+    // Filtramos por ID, no por texto ni por group
+    var trad = allProducts.filter(function (p) {
+      return allowedTradIds.indexOf(Number(p.id)) !== -1;
+    });
+
+    var esp = allProducts.filter(function (p) {
+      return allowedEspIds.indexOf(Number(p.id)) !== -1;
+    });
+
+    var all = trad.concat(esp);
+
+
+    var selTrad = qs('#selectTradicional'),
+        selEsp = qs('#selectEspecial'),
+        selM1 = qs('#selectMixta1'),
+        selM2 = qs('#selectMixta2');
+
+    function fillBasic(el, arr, selectedId) {
+      if (!el) return;
+      el.innerHTML = '<option value="">Selecciona un sabor</option>';
+      (arr || []).forEach(function (p) {
+        var o = document.createElement('option');
+        o.value = p.id;
+        o.textContent = p.name + ' (' + money(p.price) + ')';
+        if (selectedId && p.id === selectedId) o.selected = true;
+        el.appendChild(o);
+      });
+    }
+
+    function fillMixtaSelect(el, excludeId, selectedId) {
+      if (!el) return;
+      el.innerHTML = '<option value="">Selecciona un sabor</option>';
+
+      function appendGroup(label, list) {
+        if (!list || !list.length) return;
+        var og = document.createElement('optgroup');
+        og.label = label;
+        list.forEach(function (p) {
+          if (excludeId && p.id === excludeId) return;
+          var o = document.createElement('option');
+          o.value = p.id;
+          o.textContent = p.name + ' (' + money(p.price) + ')';
+          if (selectedId && p.id === selectedId) o.selected = true;
+          og.appendChild(o);
+        });
+        el.appendChild(og);
+      }
+
+      appendGroup('Tradicionales', trad);
+      appendGroup('Especiales', esp);
+    }
+
+    fillBasic(selTrad, trad, builder.saborTrad);
+    fillBasic(selEsp, esp, builder.saborEsp);
+
+    fillMixtaSelect(selM1, builder.mitad2, builder.mitad1);
+    fillMixtaSelect(selM2, builder.mitad1, builder.mitad2);
+
+    if (selTrad) {
+      selTrad.onchange = function () {
+        builder.saborTrad = parseInt(selTrad.value || 0, 10) || null;
+        updateBuilderView();
+      };
+    }
+    if (selEsp) {
+      selEsp.onchange = function () {
+        builder.saborEsp = parseInt(selEsp.value || 0, 10) || null;
+        updateBuilderView();
+      };
+    }
+    if (selM1) {
+      selM1.onchange = function () {
+        var val = parseInt(selM1.value || 0, 10) || null;
+        if (val && val === builder.mitad2) {
+          builder.mitad2 = null;
+        }
+        builder.mitad1 = val;
+        fillMixtaSelect(selM2, builder.mitad1, builder.mitad2);
+        updateBuilderView();
+      };
+    }
+    if (selM2) {
+      selM2.onchange = function () {
+        var val = parseInt(selM2.value || 0, 10) || null;
+        if (val && val === builder.mitad1) {
+          builder.mitad1 = null;
+        }
+        builder.mitad2 = val;
+        fillMixtaSelect(selM1, builder.mitad2, builder.mitad1);
+        updateBuilderView();
+      };
+    }
+
+    qsa('.tab-btn').forEach(function (btn) {
+      var tab = btn.getAttribute('data-tab');
+      btn.classList.toggle('active', tab === builder.mode);
+      btn.onclick = function () {
+        builder.mode = tab;
+        qsa('.tab-btn').forEach(function (b2) {
+          var t2 = b2.getAttribute('data-tab');
+          b2.classList.toggle('active', t2 === builder.mode);
+        });
+        qsa('.tab-content').forEach(function (c) { c.classList.add('hidden'); });
+        var panel = qs('#tab-' + builder.mode);
+        if (panel) panel.classList.remove('hidden');
+        updateBuilderView();
+      };
+    });
+
+    var mixtaTab = qs('.tab-btn[data-tab="mixta"]');
+    var mixtaContent = qs('#tab-mixta');
+    var mixtaAllowed = (builder.size === 'familiar' || builder.size === 'mediana' || builder.size === 'junior');
+
+    if (mixtaTab && mixtaContent) {
+      if (!mixtaAllowed) {
+        mixtaTab.classList.add('hidden');
+        mixtaContent.classList.add('hidden');
+        if (builder.mode === 'mixta') {
+          builder.mode = 'tradicional';
+          qsa('.tab-btn').forEach(function (btn) {
+            var t = btn.getAttribute('data-tab');
+            if (t === 'tradicional') btn.classList.add('active');
+            else btn.classList.remove('active');
+          });
+          qsa('.tab-content').forEach(function (c) { c.classList.add('hidden'); });
+          var tabTrad = qs('#tab-tradicional');
+          if (tabTrad) tabTrad.classList.remove('hidden');
+        }
+      } else {
+        mixtaTab.classList.remove('hidden');
+        if (builder.mode === 'mixta') mixtaContent.classList.remove('hidden');
+      }
+    }
+  }
+
+    function computeBuilderPrice() {
+  // Tabla de precios desde appData
+  var t = (hasAppData() &&
+           appData.pizzaOptions &&
+           appData.pizzaOptions.sizePrices &&
+           appData.pizzaOptions.sizePrices[builder.size]) || null;
+
+  if (!t) return 0;
+
+  var base = 0;
+
+  // --- Tradicional completa ---
+  if (builder.mode === 'tradicional') {
+    base = builder.saborTrad ? (t.tradicional || 0) : 0;
+  }
+
+  // --- Especial completa ---
+  else if (builder.mode === 'especial') {
+    base = builder.saborEsp ? (t.especial || 0) : 0;
+  }
+
+  // --- Mixta ---
+  else if (builder.mode === 'mixta') {
+    var half1 = findProductById(builder.mitad1);
+    var half2 = findProductById(builder.mitad2);
+
+    // Hasta que no tenga las 2 mitades, 0
+    if (!half1 || !half2) return 0;
+
+    var g1 = half1.group;
+    var g2 = half2.group;
+
+    // trad + trad -> precio tradicional
+    if (g1 === 'tradicional' && g2 === 'tradicional') {
+      base = t.tradicional || 0;
+    }
+    // esp + esp -> precio especial
+    else if (g1 === 'especial' && g2 === 'especial') {
+      base = t.especial || 0;
+    }
+    // mezcla trad + esp -> precio mixta
+    else {
+      base = t.mixta || 0;
+    }
+  }
+
+  // --- Extra pepperoni ---
+  var extra = 0;
+
+  if (builder.mode === 'tradicional' && builder.saborTrad) {
+    if (isPepperoniFlavor(builder.saborTrad)) {
+      extra = pepperoniExtra(builder.size);
+    }
+  } else if (builder.mode === 'especial' && builder.saborEsp) {
+    if (isPepperoniFlavor(builder.saborEsp)) {
+      extra = pepperoniExtra(builder.size);
+    }
+  } else if (builder.mode === 'mixta') {
+    if (isPepperoniFlavor(builder.mitad1) || isPepperoniFlavor(builder.mitad2)) {
+      extra = pepperoniExtra(builder.size);
+    }
+  }
+
+  return base + extra;
+}
+
+
+  // ¿Cuánto vale el extra de pepperoni según el tamaño?
+function pepperoniExtra(sizeId) {
+  if (sizeId === 'familiar') return 2000;
+  if (sizeId === 'mediana')  return 1000;
+  if (sizeId === 'junior')   return 1000;
+  return 0; // personal y mini sin extra
+}
+
+// ¿Este sabor es pepperoni?
+function isPepperoniFlavor(flavorId) {
+  if (!flavorId) return false;
+  var p = findProductById(flavorId);
+  if (!p || !p.name) return false;
+  var name = p.name.toLowerCase();
+  // id 5 + texto, por si acaso
+  return name.includes('pepperoni') || name.includes('peperoni') || Number(p.id) === 5;
+}
+
+
+
+  function updateBuilderView() {
+    var nameEl = qs('#builderName');
+    var detailEl = qs('#builderDetail');
+    var priceEl = qs('#builderPrice');
+    var qtyEl = qs('#builderQty');
+    var minus = qs('#builderQtyMinus');
+    var plus = qs('#builderQtyPlus');
+    var addBtn = qs('#builderAddBtn');
+
+    if (nameEl) {
+      var sizeLabel = '';
+      var sizes = (hasAppData() && appData.pizzaOptions && appData.pizzaOptions.sizes)
+        ? appData.pizzaOptions.sizes
+        : [];
+      var sz = sizes.find(function (s) { return s.id === builder.size; });
+      if (sz) sizeLabel = sz.label;
+      nameEl.textContent = 'Pizza ' + (sizeLabel || builder.size);
+    }
+
+    var detail = '';
+    if (builder.mode === 'tradicional') {
+      detail = builder.saborTrad ? pickName(builder.saborTrad) : 'Selecciona un sabor';
+    }
+    if (builder.mode === 'especial') {
+      detail = builder.saborEsp ? pickName(builder.saborEsp) : 'Selecciona un sabor';
+    }
+    if (builder.mode === 'mixta') {
+      var n1 = pickName(builder.mitad1);
+      var n2 = pickName(builder.mitad2);
+      if (n1 && n2) detail = '1/2 ' + n1 + ' + 1/2 ' + n2;
+      else detail = 'Selecciona las dos mitades';
+    }
+
+    if (detailEl) detailEl.textContent = detail;
+
+    var price = computeBuilderPrice();
+    if (priceEl) priceEl.textContent = money(price);
+
+    if (qtyEl) qtyEl.textContent = String(builder.qty);
+
+    if (minus) minus.onclick = function () {
+      builder.qty = Math.max(1, builder.qty - 1);
+      updateBuilderView();
+    };
+    if (plus) plus.onclick = function () {
+      builder.qty = Math.min(20, builder.qty + 1);
+      updateBuilderView();
+    };
+    if (addBtn) addBtn.onclick = function () {
+      addBuilderPizzaToCart();
+    };
+  }
+
+  function addBuilderPizzaToCart() {
+    var price = computeBuilderPrice();
+    if (!price) {
+      if (typeof toast === 'function') toast('Selecciona el sabor de la pizza');
+      return;
+    }
+
+    var baseName = qs('#builderName') ? qs('#builderName').textContent : 'Pizza';
+    var detail = qs('#builderDetail') ? qs('#builderDetail').textContent : '';
+    var finalName = baseName + (detail ? ' - ' + detail : '');
+
+    var product = {
+      id: 'builder-' + Date.now(),
+      name: finalName,
+      price: price
+    };
+
+    pendingProduct = product;
+    pendingQty = builder.qty;
+
+    openAdditionsModal();
+    closePizzaBuilder();
+  }
+
+  // =========================
   // GEOLOCALIZACIÓN
-  // ======================================================================
+  // =========================
 
   function setupLocationButton() {
     var btn = document.getElementById('useLocationBtn');
@@ -1351,25 +1406,31 @@
     });
   }
 
-  // ======================================================================
+  // =========================
   // EVENTOS GLOBALES
-  // ======================================================================
+  // =========================
 
   function addEventListeners() {
-    // Click global
     document.addEventListener('click', function (e) {
       var cardLink = hasClosest(e.target, '.card[data-cat][href^="#"]');
       if (cardLink) {
         setTimeout(route, 0);
       }
 
+      var cartIcon = hasClosest(e.target, '.cart-icon');
+  if (cartIcon) {
+    var panel = qs('#cartPanel');
+    var expanded = cartIcon.getAttribute('aria-expanded') === 'true';
+    cartIcon.setAttribute('aria-expanded', String(!expanded));
+    if (panel) panel.classList.toggle('open');
+    return;
+  }
+
       var qtyBtn = hasClosest(e.target, '.quantity-btn');
       if (qtyBtn) {
         var isPlus = qtyBtn.classList.contains('plus');
         var prodId = qtyBtn.getAttribute('data-product-id');
-        var addonId = qtyBtn.getAttribute('data-addon-id');
         if (prodId) { updateQuantity(prodId, isPlus ? +1 : -1); return; }
-        if (addonId) { /* changeAddonQty si lo implementas global */ return; }
       }
 
       var addBtn = hasClosest(e.target, '.btn-add-to-cart');
@@ -1390,7 +1451,7 @@
         return;
       }
 
-      // Icono carrito
+
       var cartIcon = hasClosest(e.target, '.cart-icon');
       if (cartIcon) {
         var panel = qs('#cartPanel');
@@ -1406,7 +1467,6 @@
         return;
       }
 
-      // Cerrar modales al hacer clic en el fondo o en la X
       if (e.target === orderModal) closeOrderModal();
       if (e.target === pizzaModal) closePizzaBuilder();
       if (e.target === estofadoModal) closeEstofadoBuilder();
@@ -1414,30 +1474,30 @@
       if (hasClosest(e.target, '#pizzaBuilderModal .close')) closePizzaBuilder();
       if (hasClosest(e.target, '#estofadoModal .close')) closeEstofadoBuilder();
 
-      // Cerrar carrito al hacer clic fuera del panel
-      var cartPanel = qs('#cartPanel');
-      if (cartPanel && cartPanel.classList.contains('open')) {
-        var clickInsidePanel = cartPanel.contains(e.target);
-        var clickOnCartIcon = !!hasClosest(e.target, '.cart-icon');
-        if (!clickInsidePanel && !clickOnCartIcon) {
-          cartPanel.classList.remove('open');
-          var cartIconReal = qs('.cart-icon');
-          if (cartIconReal) {
-            cartIconReal.setAttribute('aria-expanded', 'false');
-          }
-        }
-      }
-
-      // Botones de tamaño que están en la sección Pizza Tamaños
       var sizeBtnBuilder = hasClosest(e.target, '.size-btn[data-builder-size]');
       if (sizeBtnBuilder) {
         var sizeId = sizeBtnBuilder.getAttribute('data-builder-size');
         openPizzaBuilder(sizeId);
         return;
       }
-    });
+var cartPanel = qs('#cartPanel');
+    if (cartPanel && cartPanel.classList.contains('open')) {
+      var clickInsidePanel = cartPanel.contains(e.target);
+      var clickOnCartIconAgain = !!hasClosest(e.target, '.cart-icon');
 
-    // Payment method (Nequi warning)
+      // Si no fue ni dentro del panel, ni en el icono → cerramos
+      if (!clickInsidePanel && !clickOnCartIconAgain) {
+        cartPanel.classList.remove('open');
+        var cartIconReal = qs('.cart-icon');
+        if (cartIconReal) {
+          cartIconReal.setAttribute('aria-expanded', 'false');
+        }
+      }
+    }
+    // === FIN CIERRE CARRITO ===
+  });
+  
+
     var pm = qs('#paymentMethod');
     if (pm) {
       pm.addEventListener('change', function () {
@@ -1448,18 +1508,13 @@
     }
 
     var clearBtn = qs('#clearCartBtn');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', function () { clearCart(); });
-    }
+    if (clearBtn) clearBtn.addEventListener('click', function () { clearCart(); });
 
     var orderForm = qs('#orderForm');
-    if (orderForm) {
-      orderForm.addEventListener('submit', handleOrderSubmit);
-    }
+    if (orderForm) orderForm.addEventListener('submit', handleOrderSubmit);
 
     setupLocationButton();
 
-    // --- Botones del modal de adiciones ---
     var addonsConfirm = qs('#addonsConfirm');
     if (addonsConfirm) {
       addonsConfirm.addEventListener('click', function (e) {
@@ -1496,26 +1551,28 @@
       });
     }
 
-    // Cerrar modal de adiciones clicando el fondo
     document.addEventListener('click', function (ev) {
       if (ev.target === addonsModal) {
         pendingProduct = null;
         pendingQty = 1;
         closeAdditionsModal();
       }
+      
     });
+
+  
   }
 
-  // ======================================================================
-  // FOCUS TRAP PARA MODALES
-  // ======================================================================
+  // =========================
+  // FOCUS TRAP MODALES
+  // =========================
 
   var lastFocused = null;
 
   function trapFocus(modal) {
     lastFocused = document.activeElement;
     var focusables = qsa('button, [href], input, select, textarea, [tabindex]:not([disabled])', modal)
-      .filter(el => !el.hasAttribute('disabled'));
+      .filter(function (el) { return !el.hasAttribute('disabled'); });
 
     if (focusables[0]) focusables[0].focus();
 
@@ -1545,4 +1602,20 @@
     if (lastFocused && lastFocused.focus) lastFocused.focus();
   }
 
+  function bindOutsideOnce(modal, onClose) {
+    if (modal._outsideBound) return;
+    modal._outsideBound = true;
+    function outside(e) { if (e.target === modal) { onClose(); } }
+    modal._outsideHandler = outside;
+    window.addEventListener('click', outside);
+  }
+
+  function unbindOutside(modal) {
+    if (!modal || !modal._outsideBound) return;
+    window.removeEventListener('click', modal._outsideHandler);
+    modal._outsideHandler = null;
+    modal._outsideBound = false;
+  }
 })();
+ 
+
