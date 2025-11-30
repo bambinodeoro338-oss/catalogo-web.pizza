@@ -119,7 +119,11 @@
 
   <main id="mainContent" class="wrap">
     <h2 class="sr-only">Menú de pizzas, lasañas, burritos, esquites y bebidas de Bambino D’Oro</h2>
+
+    <!-- Vista de categorías -->
     <section id="home" class="home" aria-label="Categorías"></section>
+
+    <!-- Vista de productos / secciones -->
     <section id="vista" class="vista hidden" aria-live="polite"></section>
   </main>
 
@@ -129,11 +133,6 @@
       <button class="close" aria-label="Cerrar">&times;</button>
       <h2 id="orderTitle" class="chalk">Finalizar Pedido</h2>
       <div id="orderSummary" class="order-summary"></div>
-
-      <section class="panel" aria-labelledby="addonsTitle">
-        <div class="panel-head"></div>
-        <div id="addonsPicker" class="picker-grid"></div>
-      </section>
 
       <form id="orderForm" novalidate>
         <div id="orderWarning" class="order-warning" hidden></div>
@@ -168,12 +167,11 @@
             </select>
           </div>
 
-          <!-- AVISO para Nequi (nuevo) -->
+          <!-- AVISO para Nequi -->
           <div id="nequiWarning" class="alert-warning" hidden>
             No olvide enviar su comprobante de pago. Si no lo envía, el pedido no se realizará.
           </div>
 
-          <!-- SIEMPRE VISIBLE -->
           <div class="form-group" id="cashField">
             <label for="cashAmount">¿Con cuánto cancela?</label>
             <input type="number" id="cashAmount" min="0" step="1000" inputmode="numeric" placeholder="Ej: 50000" />
@@ -190,29 +188,41 @@
     </div>
   </div>
 
-  <!-- Modales existentes (pizza y estofado) -->
+  <!-- Modal Arma tu Pizza (Pizza Tamaños) -->
   <div id="pizzaBuilderModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="builderTitle" hidden>
     <div class="modal-content">
       <button class="close builder-close" aria-label="Cerrar">&times;</button>
       <h2 id="builderTitle" class="chalk">Arma tu Pizza</h2>
+
+      <!-- Picker de tamaño dentro del modal -->
       <div class="size-picker" id="sizePicker"></div>
+
+      <!-- Selección de porciones -->
       <div class="slice-picker">
         <label>Selecciona el número de porciones</label>
         <div id="sliceOptions"></div>
       </div>
+
+      <!-- Tabs de sabores -->
       <div class="builder-tabs" role="tablist">
         <button class="tab-btn active" data-tab="tradicional" role="tab" aria-selected="true">Tradicionales</button>
         <button class="tab-btn" data-tab="especial" role="tab" aria-selected="false">Especiales</button>
         <button class="tab-btn" data-tab="mixta" role="tab" aria-selected="false">Mixta</button>
       </div>
+
+      <!-- Tradicional -->
       <div class="tab-content" id="tab-tradicional">
         <label for="selectTradicional">Sabor tradicional</label>
         <select id="selectTradicional"></select>
       </div>
+
+      <!-- Especial -->
       <div class="tab-content hidden" id="tab-especial">
         <label for="selectEspecial">Sabor especial</label>
         <select id="selectEspecial"></select>
       </div>
+
+      <!-- Mixta -->
       <div class="tab-content hidden" id="tab-mixta">
         <div class="mixta-grid">
           <div>
@@ -226,6 +236,8 @@
         </div>
         <small>Puedes combinar sabores tradicionales y especiales. Siempre 2 sabores diferentes.</small>
       </div>
+
+      <!-- Resumen -->
       <div class="builder-summary">
         <div>
           <strong id="builderName">Pizza</strong>
@@ -233,6 +245,8 @@
         </div>
         <div class="builder-price">Precio: <span id="builderPrice">$0</span></div>
       </div>
+
+      <!-- Cantidad + Agregar -->
       <div class="product-actions">
         <div class="quantity-selector" aria-label="Cantidad">
           <button class="quantity-btn minus" id="builderQtyMinus" aria-label="Restar">-</button>
@@ -244,12 +258,14 @@
     </div>
   </div>
 
+  <!-- Modal Estofados -->
   <div id="estofadoModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="estofadoTitle" hidden>
     <div class="modal-content">
       <button class="close estofado-close" aria-label="Cerrar">&times;</button>
       <h2 id="estofadoTitle" class="chalk">Arma tu Estofado</h2>
       <div id="estofadoImageBox" class="estofado-image-box"></div>
       <p id="estofadoInfo" class="desc"></p>
+
       <div class="tab-content" id="tab-estofado">
         <div class="mixta-grid">
           <div>
@@ -263,6 +279,7 @@
         </div>
         <small>Solo puedes escoger entre Hawaiana, Kabano y Pollo con Champiñones.</small>
       </div>
+
       <div class="builder-summary">
         <div>
           <strong id="estofadoName">Estofado</strong>
@@ -270,6 +287,7 @@
         </div>
         <div class="builder-price">Precio: <span id="estofadoPrice">$0</span></div>
       </div>
+
       <div class="product-actions">
         <div class="quantity-selector" aria-label="Cantidad">
           <button class="quantity-btn minus" id="estofadoQtyMinus" aria-label="Restar">-</button>
@@ -281,36 +299,38 @@
     </div>
   </div>
 
+  <!-- Modal de Adiciones -->
+  <div class="modal" id="addonsModal" hidden>
+    <div class="modal-content">
+      <button class="close" id="addonsClose">×</button>
+      <h3 class="chalk">Elige tus adiciones</h3>
+      <p style="margin-bottom:8px;">Selecciona las adiciones que quieras para este producto.</p>
+
+      <div id="addonsList"></div>
+
+      <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-muted" id="addonsSkip">Sin adiciones</button>
+        <button class="btn btn-mustard" id="addonsConfirm">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="site-footer" role="contentinfo">
     <div class="wrap">
       <p>📞 WhatsApp: <strong id="whatsappNumber">Cargando…</strong></p>
       <p>⏰ Horario: <span id="businessHours">Cargando…</span></p>
     </div>
     <div class="social-bar">
-      <a class="ig-btn" href="https://www.instagram.com/elbambinodeoro_12?igsh=MW9taXAydGkxZW1xOQ==" target="_blank"
-        rel="noopener noreferrer" aria-label="Síguenos en Instagram">
+      <a class="ig-btn"
+        href="https://www.instagram.com/elbambinodeoro_12?igsh=MW9taXAydGkxZW1xOQ=="
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Síguenos en Instagram">
         <span class="ig-icon">📷</span>
         <strong>Síguenos en Instagram</strong>
         <span class="ig-user">@elbambinodeoro_12</span>
       </a>
     </div>
-
-    <!-- Modal de Adiciones -->
-    <div class="modal" id="addonsModal" hidden>
-      <div class="modal-content">
-        <button class="close" id="addonsClose">×</button>
-        <h3 class="chalk">Elige tus adiciones</h3>
-        <p style="margin-bottom:8px;">Selecciona las adiciones que quieras para este producto.</p>
-
-        <div id="addonsList"></div>
-
-        <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
-          <button class="btn btn-muted" id="addonsSkip">Sin adiciones</button>
-          <button class="btn btn-mustard" id="addonsConfirm">Confirmar</button>
-        </div>
-      </div>
-    </div>
-
   </footer>
 
   <noscript>
