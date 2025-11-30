@@ -666,7 +666,7 @@
   }
 
   // ======================================================================
-// ESTOFADOS BUILDER
+// ESTOFADOS BUILDER (versión simplificada y robusta)
 // ======================================================================
 
 var estofado = {
@@ -675,6 +675,13 @@ var estofado = {
   s1: null,
   s2: null
 };
+
+// helper interno para nombres de sabores
+function estofadoFlavorName(id) {
+  if (!id) return '';
+  var p = findProductById(id);
+  return p && p.name ? p.name : '';
+}
 
 function openEstofadoBuilder(product) {
   estofado.baseProduct = product;
@@ -697,7 +704,6 @@ function closeEstofadoBuilder() {
     estofadoModal.setAttribute('hidden', '');
     releaseTrap(estofadoModal);
   }
-  // limpiamos estado por si acaso
   estofado.baseProduct = null;
   estofado.qty = 1;
   estofado.s1 = null;
@@ -705,17 +711,18 @@ function closeEstofadoBuilder() {
 }
 
 function renderEstofadoBuilder() {
-  // 1) Tomamos todas las pizzas de la categoría "pizza"
-  var pizzaCat = getPizzaCategory();
+  // 1) Tomamos las pizzas de la categoría "pizza"
   var all = [];
-  if (pizzaCat && Array.isArray(pizzaCat.products)) {
-    all = pizzaCat.products.slice();
+  if (hasAppData() && Array.isArray(appData.categories)) {
+    var pizzaCat = appData.categories.find(function (c) { return c.id === 'pizza'; });
+    if (pizzaCat && Array.isArray(pizzaCat.products)) {
+      all = pizzaCat.products.slice();
+    }
   }
 
   // 2) Permitimos SOLO estos IDs:
   // 1: Hawaiana, 2: Pollo con champiñón, 3: Kabano
   var allowedIds = [1, 2, 3];
-
   var allowed = all.filter(function (p) {
     return allowedIds.indexOf(Number(p.id)) !== -1;
   });
@@ -797,10 +804,8 @@ function renderEstofadoBuilder() {
 }
 
 function updateEstofadoView() {
-  // pickName debe existir ya en tu script (lo usabas en estofado antes).
-  // Si no, podemos reemplazarlo por un get simple.
-  var n1 = pickName(estofado.s1);
-  var n2 = pickName(estofado.s2);
+  var n1 = estofadoFlavorName(estofado.s1);
+  var n2 = estofadoFlavorName(estofado.s2);
 
   var nameEl = qs('#estofadoName');
   if (nameEl) {
@@ -831,13 +836,17 @@ function addEstofadoToCart() {
     return;
   }
 
-  var n1 = pickName(estofado.s1);
-  var n2 = pickName(estofado.s2);
+  var n1 = estofadoFlavorName(estofado.s1);
+  var n2 = estofadoFlavorName(estofado.s2);
 
   var name = estofado.baseProduct.name + ' - ' + n1 + ' + ' + n2;
   var price = estofado.baseProduct.price || 0;
 
-  var baseProduct = { id: 'e-' + Date.now(), name: name, price: price };
+  var baseProduct = {
+    id: 'e-' + Date.now(),
+    name: name,
+    price: price
+  };
 
   pendingProduct = baseProduct;
   pendingQty = estofado.qty;
@@ -845,6 +854,7 @@ function addEstofadoToCart() {
   closeEstofadoBuilder();
   openAdditionsModal();
 }
+
 
 
 function getPizzaCategory() {
@@ -907,9 +917,8 @@ var builder = {
   mitad2: null
 };
 
-// Dejar el builder en estado "nuevo"
 function resetBuilderState(sizeId) {
-  builder.size = sizeId || null;
+  builder.size = sizeId || builder.size || 'familiar';
   builder.slices = null;
   builder.mode = 'tradicional';  // siempre arrancamos en tradicional
   builder.qty = 1;
@@ -918,6 +927,7 @@ function resetBuilderState(sizeId) {
   builder.mitad1 = null;
   builder.mitad2 = null;
 }
+
 
 
   function openPizzaBuilder(sizeId) {
@@ -999,7 +1009,7 @@ function resetBuilderState(sizeId) {
   }
 
   function renderBuilderSizePicker() {
-  var cont = qs('#sizePicker'); 
+  var cont = qs('#sizePicker');
   if (!cont) return;
 
   cont.innerHTML = '';
@@ -1014,24 +1024,26 @@ function resetBuilderState(sizeId) {
     b.textContent = s.label;
 
     b.addEventListener('click', function () {
-      // ⬇️ Cambio de tamaño = reset total del builder
-      builder.size = s.id;
-      builder.slices = null;
+      // 🔥 IMPORTANTE: cambiar de tamaño dentro del modal = reset completo
+      resetBuilderState(s.id);
 
-      // Siempre arrancamos en TRADICIONAL al cambiar de tamaño
-      builder.mode = 'tradicional';
-      builder.saborTrad = null;
-      builder.saborEsp = null;
-      builder.mitad1 = null;
-      builder.mitad2 = null;
-      builder.qty = 1;
+      // opcional: para asegurarnos, limpiar selects visualmente
+      ['#selectTradicional', '#selectEspecial', '#selectMixta1', '#selectMixta2'].forEach(function (id) {
+        var sel = qs(id);
+        if (sel) sel.selectedIndex = 0;
+      });
 
-      renderBuilder();      // vuelve a pintar tabs, selects y precio
+      // volver a pintar UI (tamaños, porciones, selects, precio)
+      renderBuilder();
+
+      // y asegurar que la pestaña/contents queden en TRADICIONAL
+      syncBuilderTabsAndContent();
     });
 
     cont.appendChild(b);
   });
 }
+
 
 
   function renderSliceOptions() {
