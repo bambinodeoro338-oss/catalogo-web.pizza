@@ -27,8 +27,8 @@ const appData = {
     },
     slices: {
       familiar: [8, 10, 12, 16],
-      mediana:  [8],
-      junior:   [4],
+      mediana:  [8,],
+      junior:   [4,8],
       personal: [4],
       mini:     []
     }
@@ -39,7 +39,7 @@ const appData = {
     { id: "pina",      name: "Piña",        price: 2000, icon: "🍍" },
     { id: "tocineta",  name: "Tocineta",    price: 3000, icon: "🥓" },
     { id: "maiz",      name: "Maíz",        price: 2000, icon: "🌽" },
-    { id: "queso",     name: "Queso",       price: 3000, icon: "🧀" },
+    { id: "queso",     name: "Queso",       price: 4000, icon: "🧀" },
     { id: "pepinillo", name: "Pepinillo",   price: 2500, icon: "🥒" },
     { id: "jalapeno",  name: "Jalapeños",   price: 3000, icon: "🌶️" },
 
@@ -69,7 +69,7 @@ const appData = {
         /* individuales – tradicionales */
         { id: 1, name: "Hawaiana", group: "tradicional", description: "Piña, jamón y queso.", price: 8000, image: "images/pizzas/hawaiana.jpg" },
         { id: 2, name: "Pollo con champiñón", group: "tradicional", description: "Pollo desmechado, champiñones, jamón y queso.", price: 8000, image: "images/pizzas/pollo-champinon.jpg" },
-        { id: 3, name: "Kabano", group: "tradicional", description: "Kabano y queso.", price: 8000, image: "images/pizzas/Kabano.jpg" },
+        { id: 3, name: "Kabano", group: "tradicional", description: "Kabano y queso.", price: 8000, image: "images/pizzas/kabano.jpg" },
         { id: 4, name: "Jamón y queso", group: "tradicional", description: "Jamón y queso.", price: 8000, image: "images/pizzas/jamon-queso.jpg" },
         { id: 5, name: "Pepperoni", group: "tradicional", description: "Pepperoni y queso.", price: 8500, image: "images/pizzas/pepperoni.jpg" },
         { id: 6, name: "Maduro", group: "tradicional", description: "Maduro, tocineta y queso.", price: 8000, image: "images/pizzas/maduro.jpg" },
@@ -102,7 +102,7 @@ const appData = {
           name: "Estofado Sencillo",
           group: "estofado",
           description: "Solo salsa. Elige 2 sabores de pizza tradicionales.",
-          price: 17000,
+          price: 16000,
           type: "estofado",
           variant: "sencillo",
           icon: "🍕🍕",
