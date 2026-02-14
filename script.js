@@ -304,10 +304,12 @@
   }
 
   function productAllowsAdiciones(product) {
-    var cat = product && product.categoryId;
-    if (cat === 'beverages') return false;
-    return true;
-  }
+  var cat = product && product.categoryId;
+  // ❌ Solo las bebidas NO tienen adiciones
+  if (cat === 'beverages') return false;
+  // ✅ Todos los demás productos (incluyendo pizzas individuales, estofados, lasañas, burritos, esquites) SÍ pueden llevar adiciones
+  return true;
+}
 
   function getAdicionesCatalog() {
     if (!hasAppData()) return [];
@@ -328,25 +330,66 @@
     return label ? parseInt(label.textContent || '1', 10) : 1;
   }
 
-  function openAdditionsModal() {
-    if (!addonsModal || !pendingProduct) {
-      if (pendingProduct) {
-        cart.push({ product: pendingProduct, quantity: pendingQty });
-        persistCart();
-        updateCartView();
-        animateCart();
-        if (typeof toast === 'function') {
-          toast(pendingQty + ' ' + pendingProduct.name + ' agregada(s)');
-        }
+ // =======================================================
+// Modal de Adiciones – Ahora filtra solo queso para pizza entera
+// =======================================================
+
+function openAdditionsModal() {
+  // Si no hay producto pendiente o no hay modal, agregamos directo
+  if (!addonsModal || !pendingProduct) {
+    if (pendingProduct) {
+      cart.push({ product: pendingProduct, quantity: pendingQty });
+      persistCart();
+      updateCartView();
+      animateCart();
+      if (typeof toast === 'function') {
+        toast(pendingQty + ' ' + pendingProduct.name + ' agregada(s)');
+      }
+    }
+    pendingProduct = null;
+    pendingQty = 1;
+    return;
+  }
+
+  // 🔍 Detectar si es pizza del constructor
+  var isBuilderPizza = pendingProduct.fromBuilder === true ||
+                      (pendingProduct.id && String(pendingProduct.id).startsWith('builder-'));
+
+  // 🚫 Si es pizza del constructor y NO es familiar ni mediana → agregar directo
+  if (isBuilderPizza) {
+    var size = pendingProduct.size;
+    if (size !== 'familiar' && size !== 'mediana') {
+      // 🔹 Agregar sin modal
+      cart.push({ product: pendingProduct, quantity: pendingQty });
+      persistCart();
+      updateCartView();
+      animateCart();
+      if (typeof toast === 'function') {
+        toast(pendingQty + ' ' + pendingProduct.name + ' agregada(s)');
       }
       pendingProduct = null;
       pendingQty = 1;
       return;
     }
+  }
 
-    var list = qs('#addonsList', addonsModal);
-    if (!list) return;
+  // -------------------------------------------------
+  // Llegados aquí: mostramos el modal con adiciones
+  // -------------------------------------------------
+  var list = qs('#addonsList', addonsModal);
+  if (!list) return;
 
+  // ✅ Caso 1: Pizza del constructor (familiar o mediana) → Solo queso a $12.000
+  if (isBuilderPizza) {
+    list.innerHTML = '<label class="addon-option">' +
+      '<input type="checkbox" data-addon-id="queso" data-addon-price="12000">' +
+      '<span class="addon-icon">🧀</span>' +
+      '<span class="addon-name">Queso</span>' +
+      '<span class="addon-price">+' + money(12000) + '</span>' +
+    '</label>';
+  } 
+  // ✅ Caso 2: Otros productos → Catálogo completo
+  else {
     var catalog = getAdicionesCatalog();
     list.innerHTML = catalog.map(function (a) {
       return '<label class="addon-option">' +
@@ -356,11 +399,13 @@
         '<span class="addon-price">+' + money(a.price || 0) + '</span>' +
       '</label>';
     }).join('');
-
-    addonsModal.style.display = 'grid';
-    addonsModal.removeAttribute('hidden');
-    trapFocus(addonsModal);
   }
+
+  // Mostrar modal
+  addonsModal.style.display = 'grid';
+  addonsModal.removeAttribute('hidden');
+  trapFocus(addonsModal);
+}
 
   function closeAdditionsModal() {
     if (!addonsModal) return;
@@ -370,53 +415,68 @@
   }
 
   function confirmAdditions() {
-    if (!pendingProduct) {
-      closeAdditionsModal();
-      return;
-    }
-
-    var list = qs('#addonsList', addonsModal);
-    var checks = list ? qsa('input[type="checkbox"]', list) : [];
-    var catalog = getAdicionesCatalog();
-
-    var chosen = [];
-    var extraTotal = 0;
-
-    checks.forEach(function (ch) {
-      if (!ch.checked) return;
-      var id = ch.getAttribute('data-addon-id');
-      var info = catalog.find(function (a) { return String(a.id) === String(id); });
-      if (!info) return;
-      chosen.push(info);
-      extraTotal += info.price || 0;
-    });
-
-    var finalProduct = {
-      id: String(pendingProduct.id) + '-a-' + Date.now(),
-      name: pendingProduct.name,
-      price: (pendingProduct.price || 0) + extraTotal
-    };
-
-    if (chosen.length) {
-      var extrasText = chosen
-        .map(function (a) { return 'adición de ' + a.name.toLowerCase(); })
-        .join(' + ');
-      finalProduct.name += ' + ' + extrasText;
-    }
-
-    cart.push({ product: finalProduct, quantity: pendingQty });
-    persistCart();
-    updateCartView();
-    animateCart();
-
-    if (typeof toast === 'function') {
-      toast(pendingQty + ' ' + finalProduct.name + ' agregada(s)');
-    }
-
-    pendingProduct = null;
-    pendingQty = 1;
+  if (!pendingProduct) {
     closeAdditionsModal();
+    return;
   }
+
+  var list = qs('#addonsList', addonsModal);
+  var checks = list ? qsa('input[type="checkbox"]', list) : [];
+  var catalog = getAdicionesCatalog();
+
+  var chosen = [];
+  var extraTotal = 0;
+
+  checks.forEach(function (ch) {
+    if (!ch.checked) return;
+    var id = ch.getAttribute('data-addon-id');
+    var priceAttr = ch.getAttribute('data-addon-price');
+    var info, price, name;
+
+    if (priceAttr !== null) {
+      // 🆕 Precio personalizado (ej: queso a 12000)
+      price = parseInt(priceAttr, 10) || 0;
+      var catalogInfo = catalog.find(function (a) { return String(a.id) === String(id); });
+      name = catalogInfo ? catalogInfo.name : (id === 'queso' ? 'Queso' : id);
+      info = { id: id, name: name, price: price };
+    } else {
+      // ✅ Adición normal
+      info = catalog.find(function (a) { return String(a.id) === String(id); });
+      if (!info) return;
+      price = info.price || 0;
+      info = { ...info, price: price };
+    }
+
+    chosen.push(info);
+    extraTotal += price;
+  });
+
+  var finalProduct = {
+    id: String(pendingProduct.id) + '-a-' + Date.now(),
+    name: pendingProduct.name,
+    price: (pendingProduct.price || 0) + extraTotal
+  };
+
+  if (chosen.length) {
+    var extrasText = chosen
+      .map(function (a) { return 'adición de ' + a.name.toLowerCase(); })
+      .join(' + ');
+    finalProduct.name += ' + ' + extrasText;
+  }
+
+  cart.push({ product: finalProduct, quantity: pendingQty });
+  persistCart();
+  updateCartView();
+  animateCart();
+
+  if (typeof toast === 'function') {
+    toast(pendingQty + ' ' + finalProduct.name + ' agregada(s)');
+  }
+
+  pendingProduct = null;
+  pendingQty = 1;
+  closeAdditionsModal();
+}
 
   function addToCart(id) {
     var p = findProductById(id);
@@ -1279,7 +1339,7 @@ function resetBuilderState(sizeId) {
 
   // ¿Cuánto vale el extra de pepperoni según el tamaño?
 function pepperoniExtra(sizeId) {
-  if (sizeId === 'familiar') return 2000;
+  if (sizeId === 'familiar') return 4000;
   if (sizeId === 'mediana')  return 1000;
   if (sizeId === 'junior')   return 1000;
   return 0; // personal y mini sin extra
@@ -1350,29 +1410,32 @@ function isPepperoniFlavor(flavorId) {
     };
   }
 
-  function addBuilderPizzaToCart() {
-    var price = computeBuilderPrice();
-    if (!price) {
-      if (typeof toast === 'function') toast('Selecciona el sabor de la pizza');
-      return;
-    }
-
-    var baseName = qs('#builderName') ? qs('#builderName').textContent : 'Pizza';
-    var detail = qs('#builderDetail') ? qs('#builderDetail').textContent : '';
-    var finalName = baseName + (detail ? ' - ' + detail : '');
-
-    var product = {
-      id: 'builder-' + Date.now(),
-      name: finalName,
-      price: price
-    };
-
-    pendingProduct = product;
-    pendingQty = builder.qty;
-
-    openAdditionsModal();
-    closePizzaBuilder();
+ function addBuilderPizzaToCart() {
+  var price = computeBuilderPrice();
+  if (!price) {
+    if (typeof toast === 'function') toast('Selecciona el sabor de la pizza');
+    return;
   }
+
+  var baseName = qs('#builderName') ? qs('#builderName').textContent : 'Pizza';
+  var detail = qs('#builderDetail') ? qs('#builderDetail').textContent : '';
+  var finalName = baseName + (detail ? ' - ' + detail : '');
+
+  var product = {
+    id: 'builder-' + Date.now(),
+    name: finalName,
+    price: price,
+    size: builder.size,       // Guardamos el tamaño
+    fromBuilder: true        // Identificador para el constructor
+  };
+
+  pendingProduct = product;
+  pendingQty = builder.qty;
+
+  // 👉 Ahora decidimos en openAdditionsModal si mostrar o no el modal
+  openAdditionsModal();
+  closePizzaBuilder();
+}
 
   // =========================
   // GEOLOCALIZACIÓN
