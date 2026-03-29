@@ -666,7 +666,7 @@ function openAdditionsModal() {
     }
 
     if (form.paymentMethod === 'Nequi') {
-      msg += '\n*Aviso:* No olvide enviar su comprobante de pago. Si no lo envía, el pedido no se realizará.\n';
+      msg += '\n*Aviso:* No olvide enviar su comprobante de pago. Si no lo envía, el pedido no se realizará, numero de nequi "3178530811".\n';
     }
 
     if (form.notes) msg += '- Notas adicionales: ' + form.notes + '\n';
