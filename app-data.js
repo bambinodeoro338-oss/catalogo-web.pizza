@@ -181,12 +181,12 @@ const appData = {
       name: "Esquites",
       icon: "🍲",
       products: [
-        { id: 33, name: "Esquite Tocineta", description: "Maíz, queso, tocineta, salsa de la casa, cheddar y chipotle.", price: 16000, image: "images/esquites/esquites.jpg" },
-        { id: 34, name: "Esquite Chorizo", description: "Maíz, chorizo, salsa de la casa, chipotle y queso.", price: 16000, image: "images/esquites/esquites.jpg" },
-        { id: 35, name: "Esquite Carne", description: "Maíz, queso, carne desmechada, pico de gallo, salsa de la casa y chipotle.", price: 19000, image: "images/esquites/esquites.jpg" },
-        { id: 36, name: "Esquite Doritos", description: "Maíz, queso, carne, pico de gallo, salsa de la casa y chipotle con Doritos.", price: 16000, image: "images/esquites/esquites.jpg" },
-        { id: 37, name: "Esquite Takis", description: "Maíz, queso, carne, pico de gallo, salsa de la casa y chipotle con Takis y fajín.", price: 17000, image: "images/esquites/esquites.jpg" },
-        { id: 38, name: "Esquite Chicharrón", description: "Maíz, queso, chicharrón molido, salsa de la casa, chipotle y cheddar.", price: 19000, image: "images/esquites/esquites.jpg" }
+        { id: 33, name: "Esquite Tocineta", description: "Maíz, queso, tocineta, salsa de la casa, cheddar y chipotle.", price: 15000, image: "images/esquites/esquites.jpg" },
+        { id: 34, name: "Esquite Chorizo", description: "Maíz, chorizo, salsa de la casa, chipotle y queso.", price: 15000, image: "images/esquites/esquites.jpg" },
+        { id: 35, name: "Esquite Carne", description: "Maíz, queso, carne desmechada, pico de gallo, salsa de la casa y chipotle.", price: 18000, image: "images/esquites/esquites.jpg" },
+        { id: 36, name: "Esquite Doritos", description: "Maíz, queso, carne, pico de gallo, salsa de la casa y chipotle con Doritos.", price: 15000, image: "images/esquites/esquites.jpg" },
+        { id: 37, name: "Esquite Takis", description: "Maíz, queso, carne, pico de gallo, salsa de la casa y chipotle con Takis y fajín.", price: 16000, image: "images/esquites/esquites.jpg" },
+        { id: 38, name: "Esquite Chicharrón", description: "Maíz, queso, chicharrón molido, salsa de la casa, chipotle y cheddar.", price: 18000, image: "images/esquites/esquites.jpg" }
       ]
     },
     {
@@ -201,15 +201,15 @@ const appData = {
         { id: 20, name: "Postobón 250 ml personal", price: 2500, icon: "🥤" },
         { id: 21, name: "Postobón 1.5 L", price: 6500, icon: "🥤" },
         { id: 22, name: "Postobón 2.5 L", price: 10500, icon: "🥤" },
-        { id: 23, name: "Cola & Pola personal", price: 4000, icon: "🍺" },
+        { id: 23, name: "Cola & 400 ml personal", price: 4000, icon: "🍺" },
         { id: 24, name: "Agua 600 ml personal", price: 2200, icon: "💧" },
         { id: 25, name: "Coca-Cola 500 ml", price: 5000, icon: "🥤" },
-        { id: 26, name: "Coca-Cola 1.5 L", price: 8000, icon: "🥤" },
+        { id: 26, name: "Coca-Cola 1.5 L", price: 8500, icon: "🥤" },
         { id: 27, name: "Coca-Cola 3 L", price: 11500, icon: "🥤" },
         { id: 41, name: "Soda", price: 3500, icon: "🥤" },
         { id: 41, name: "Quatro", price: 4000, icon: "🥤" },
         { id: 41, name: "Premio", price: 4000, icon: "🥤" },
-        { id: 41, name: "Pony Malta", price: 2200, icon: "🥤" },
+        { id: 41, name: "Pony Malta Personal", price: 3500, icon: "🥤" },
         { id: 41, name: "Natumalta",                          price: 2000,  icon: "🥤" },
         { id: 41, name: "Soda", price: 3500, icon: "🥤" },
         { id: 28, name: "Águila (lata)", price: 5000, icon: "🍺" },
